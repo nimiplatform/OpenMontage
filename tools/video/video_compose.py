@@ -37,6 +37,7 @@ import logging
 import secrets
 import shutil
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -203,6 +204,9 @@ class VideoCompose(BaseTool):
                     "networks). The subprocess timeout is widened to match."
                 ),
             },
+            "remotion_entry_point": {"type": "string", "description": "Explicit composer-relative source entry or prebuilt bundle directory."},
+            "remotion_composition_id": {"type": "string", "description": "Composition exported by the explicit entry."},
+            "remotion_browser_executable": {"type": "string", "description": "Browser delivered with the selected media runtime."},
         },
     }
 
@@ -1994,6 +1998,14 @@ class VideoCompose(BaseTool):
         # This prevents all pipelines from collapsing into the Explainer visual grammar.
         renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
         composition_id = self._get_composition_id(renderer_family)
+        entry_point = composer_dir / "src" / "index.tsx"
+        if inputs.get("remotion_entry_point"):
+            entry_point = (composer_dir / inputs["remotion_entry_point"]).resolve()
+            if not entry_point.is_relative_to(composer_dir.resolve()) or not entry_point.exists():
+                return ToolResult(success=False, error="The requested Remotion entry must exist inside the composer project.")
+            composition_id = inputs.get("remotion_composition_id")
+            if not isinstance(composition_id, str) or not composition_id.strip():
+                return ToolResult(success=False, error="An explicit Remotion entry requires a composition id.")
 
         if composition_id == "CinematicRenderer":
             if not props.get("scenes") and props.get("cuts"):
@@ -2029,6 +2041,7 @@ class VideoCompose(BaseTool):
         # writing or command setup — not just during the render — still removes
         # the staged user media instead of leaving it on disk.
         props_path = output_path.parent / ".remotion_props.json"
+        staged_bundle: Path | None = None
         staged_count = 0
         profile_name = inputs.get("profile")
         try:
@@ -2043,13 +2056,23 @@ class VideoCompose(BaseTool):
                 # public_dir is their contract to populate, so leave it untouched.
                 self._mirror_public_dir(composer_dir / "public", public_dir)
 
+            render_entry = entry_point
+            if entry_point.is_dir():
+                # A prebuilt bundle serves its own public/ tree. Keep both the
+                # installed bundle and user media immutable by staging a render copy.
+                staged_bundle = Path(tempfile.mkdtemp(prefix=".remotion-bundle-", dir=output_path.parent))
+                shutil.copytree(entry_point, staged_bundle, dirs_exist_ok=True)
+                if public_dir is not None:
+                    shutil.copytree(public_dir, staged_bundle / "public", dirs_exist_ok=True)
+                render_entry = staged_bundle
+
             # Write the fully adapted/staged props, never the original cut payload.
             with open(props_path, "w", encoding="utf-8") as f:
                 json.dump(props, f)
 
             cmd = [
                 "npx", "remotion", "render",
-                str(composer_dir / "src" / "index.tsx"),
+                str(render_entry),
                 composition_id,
                 str(output_path),
                 # Use the `--props=<path>` equals form rather than two separate
@@ -2059,8 +2082,10 @@ class VideoCompose(BaseTool):
                 # API Remotion recommends for file paths and is cross-platform safe.
                 f"--props={props_path}",
             ]
-            if public_dir is not None:
+            if public_dir is not None and staged_bundle is None:
                 cmd.append(f"--public-dir={public_dir}")
+            if inputs.get("remotion_browser_executable"):
+                cmd.append(f"--browser-executable={inputs['remotion_browser_executable']}")
 
             # Apply media profile dimensions
             if profile_name:
@@ -2113,6 +2138,10 @@ class VideoCompose(BaseTool):
         except Exception as e:
             return ToolResult(success=False, error=f"Remotion render failed: {e}")
         finally:
+            if staged_bundle is not None:
+                if staged_bundle.parent != output_path.parent:
+                    raise RuntimeError("Unexpected Remotion bundle cleanup directory")
+                shutil.rmtree(staged_bundle)
             if props_path.exists():
                 props_path.unlink()
             if cleanup_public_dir and public_dir is not None and public_dir.exists():

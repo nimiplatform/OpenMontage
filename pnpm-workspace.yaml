@@ -1,0 +1,4 @@
+# Keep the Nimi App independent of any enclosing development workspace.
+# The Python tools and Remotion composer retain their own dependency setup.
+packages:
+  - '.'

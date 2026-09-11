@@ -1,0 +1,101 @@
+{
+  "VisionLocate": {
+    "chooseImage": "选择图片",
+    "replaceImage": "更换图片",
+    "draftImage": "待定位的图片",
+    "imageHint": "一张静态图片 · PNG、JPEG、WebP 或 GIF · 不超过 32 MiB",
+    "queryLabel": "描述目标",
+    "modelSelectionRequired": "尚未选择图像定位的模型配置。",
+    "selectModelAction": "在 Nimi Desktop 的“运行时 → 模型配置”中选择图像定位配置，然后重新定位。",
+    "invalidInput": "图片或目标描述不符合定位要求。",
+    "correctInput": "请使用一张能正常打开的静态 JPEG、PNG、WebP 或 GIF（不支持多帧图片），不超过 32 MiB、约 6700 万像素。填写非空的目标描述，UTF-8 编码不超过 8 KiB，然后重新定位。",
+    "historySummaryOnly": "此定位结果较大，历史仅保留摘要和任务编号。完整坐标请在当次运行中导出。",
+    "stoppedBeforeSubmit": "定位请求已停止，尚未提交任务。",
+    "geometry": "结果形态", "box": "边界框", "point": "定位点", "localOnly": "使用本地图像定位，可通过下方配置入口选择模型。",
+    "inputRequired": "请附上一张静态图片，并描述要定位的目标。", "imageTooLarge": "请选择不超过 32 MiB 的静态图片。", "resultMissing": "Runtime 未返回完整的定位结果。",
+    "found": "找到 {{count}} 个匹配目标", "noMatch": "未找到匹配目标", "sourceImage": "本次任务使用的图片", "overlay": "任务图片上的定位结果", "target": "目标 {{index}}",
+    "previewUnavailable": "输入图片的预览已不可用。下方坐标仍对应记录中的原图。", "coordinates": "图片标识与坐标", "matches": "匹配目标", "queued": "正在排队等待定位…", "running": "正在加载模型或定位目标…"
+  },
+  "Capabilities": {
+    "visionLocate": { "label": "图像定位", "summary": "描述单张图片中的物体或控件，获取边界框或定位点。" },
+    "imageGenerate": {
+      "label": "图像生成",
+      "summary": "提示词 → image.generate 场景任务 → 类型化产物预览结果。"
+    },
+    "videoGenerate": {
+      "label": "视频生成",
+      "summary": "提示词 → video.generate 场景任务 → 类型化产物预览结果。"
+    },
+    "musicGenerate": {
+      "label": "音乐生成",
+      "summary": "提示词与歌词 → 受保护 music.generate 场景任务 → 采用 WAV。"
+    }
+  },
+  "Studio": {
+    "profiles": {
+      "visionLocate": { "inputTitle": "测试图像定位", "inputPlaceholder": "例如：右上角的搜索按钮，或桌上的红色杯子…", "primaryLabel": "定位目标", "primaryRunningLabel": "正在定位…", "emptyTitle": "定位图片中的物体或控件", "emptyHint": "选择一张静态图片，描述目标，再选择边界框或定位点。", "footnote": "坐标以应用方向后的完整原图为基准。" },
+      "imageGenerate": {
+        "inputTitle": "测试图像生成",
+        "inputPlaceholder": "描述你希望 Runtime 渲染的图像…",
+        "primaryLabel": "生成图像",
+        "primaryRunningLabel": "生成中…",
+        "emptyTitle": "等待渲染",
+        "emptyHint": "任务返回后，生成的图像会显示在这里。",
+        "footnote": "Runtime 会排队一个渲染任务并返回类型化产物。"
+      },
+      "videoGenerate": {
+        "inputTitle": "测试视频生成",
+        "inputPlaceholder": "描述你想生成的短片…",
+        "primaryLabel": "生成视频",
+        "primaryRunningLabel": "生成中…",
+        "emptyTitle": "等待渲染",
+        "emptyHint": "任务返回后，生成的短片会显示在这里。",
+        "footnote": "文生视频以 Runtime 任务运行；返回类型化产物。"
+      },
+      "musicGenerate": {
+        "inputTitle": "测试音乐生成",
+        "inputPlaceholder": "描述歌曲、流派、配器与演唱风格…",
+        "primaryLabel": "生成音乐",
+        "primaryRunningLabel": "生成中…",
+        "emptyTitle": "等待音乐",
+        "emptyHint": "任务完成后会在此采用 Runtime 托管的 WAV。",
+        "footnote": "MiniMax-Music3 Preview 暂无可信进度；取消会终止当前 CLI 进程。"
+      }
+    },
+    "parameters": {
+      "videoModeT2v": "文生视频",
+      "videoModeReference": "单参考图",
+      "chooseImageFile": "选择并上传图片",
+      "clearReferenceImage": "清除参考图片",
+      "uploadingImage": "正在上传图片…",
+      "imageFileTooLarge": "图片文件必须非空且不超过 32 MiB。",
+      "imageFileMimeUnsupported": "请选择 PNG、JPEG、WebP 或 GIF 图片。",
+      "fields": {
+        "negativePrompt": "负向提示词",
+        "count": "数量",
+        "size": "尺寸",
+        "aspectRatio": "宽高比",
+        "quality": "质量",
+        "style": "风格",
+        "referenceImage": "参考图 URL",
+        "mask": "蒙版 URL",
+        "mode": "模式",
+        "referenceArtifactId": "参考产物 ID",
+        "referenceImageFile": "本地参考图片",
+        "resolution": "分辨率",
+        "frames": "帧数",
+        "generateAudio": "生成音频",
+        "ratio": "画面比例",
+        "durationSec": "时长（秒）",
+        "fps": "帧率",
+        "cameraFixed": "固定镜头",
+        "watermark": "水印",
+        "draft": "草稿模式",
+        "returnLastFrame": "返回末帧",
+        "serviceTier": "服务等级",
+        "executionExpiresAfterSec": "执行过期时间（秒）",
+        "lyrics": "歌词"
+      }
+    }
+  }
+}

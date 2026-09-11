@@ -1,0 +1,22 @@
+app_id: openmontage.studio
+display_name: OpenMontage
+version: 0.1.0
+profile: standalone
+manifest_role: submitted-input
+app_access:
+  - runtime.consume
+capability_contract_refs:
+  - text.generate
+  - image.generate
+  - audio.synthesize
+required_standardized_feature_refs: []
+storage_policy:
+  kind: nimi-mediated-default
+metadata:
+  summary: "Create narrated image explainers from your own source material with Nimi AI and local video rendering."
+  icon: assets/app-icon.png
+  readme: NIMI_APP.md
+  release_notes: RELEASE_NOTES.md
+local_development:
+  electron:
+    renderer_origin: http://127.0.0.1:1461

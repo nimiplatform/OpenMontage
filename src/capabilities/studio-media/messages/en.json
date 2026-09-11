@@ -1,0 +1,101 @@
+{
+  "VisionLocate": {
+    "chooseImage": "Choose image",
+    "replaceImage": "Replace image",
+    "draftImage": "Image to locate in",
+    "imageHint": "One static image · PNG, JPEG, WebP or GIF · Up to 32 MiB",
+    "queryLabel": "Describe the target",
+    "modelSelectionRequired": "No model configuration is selected for visual localization.",
+    "selectModelAction": "In Nimi Desktop, open Runtime → Model configuration and select a visual localization configuration, then locate again.",
+    "invalidInput": "The image or target description does not meet the localization requirements.",
+    "correctInput": "Use one readable, static JPEG, PNG, WebP or GIF (multi-frame images are unsupported), up to 32 MiB and about 67 million pixels. Enter a nonempty target description of at most 8 KiB in UTF-8, then locate again.",
+    "historySummaryOnly": "This large result's history keeps its summary and Job ID. Export full coordinates during the original run.",
+    "stoppedBeforeSubmit": "Stopped before submitting a Locate job.",
+    "geometry": "Result shape", "box": "Bounding boxes", "point": "Points", "localOnly": "Runs locally. Choose a model using the configuration control below.",
+    "inputRequired": "Attach one static image and describe the target to locate.", "imageTooLarge": "Choose a static image of at most 32 MiB.", "resultMissing": "Runtime returned no typed Locate result.",
+    "found": "Found {{count}} matching targets", "noMatch": "No matching targets found", "sourceImage": "Image used for this task", "overlay": "Locations on the task image", "target": "Target {{index}}",
+    "previewUnavailable": "The input image preview is no longer available. The coordinates below still refer to the recorded image.", "coordinates": "Image identity and coordinates", "matches": "Matches", "queued": "Queued for localization…", "running": "Loading the model or locating targets…"
+  },
+  "Capabilities": {
+    "visionLocate": { "label": "Visual localization", "summary": "Describe an object or control in one image to get boxes or points." },
+    "imageGenerate": {
+      "label": "Image Generate",
+      "summary": "Prompt → image.generate Scenario Job → typed artifact preview result."
+    },
+    "videoGenerate": {
+      "label": "Video Generate",
+      "summary": "Prompt → video.generate Scenario Job → typed artifact preview result."
+    },
+    "musicGenerate": {
+      "label": "Music Generate",
+      "summary": "Prompt and lyrics → protected music.generate Scenario Job → adopted WAV."
+    }
+  },
+  "Studio": {
+    "profiles": {
+      "visionLocate": { "inputTitle": "Test visual localization", "inputPlaceholder": "For example: the search button at the top right, or the red cup on the desk…", "primaryLabel": "Locate targets", "primaryRunningLabel": "Locating…", "emptyTitle": "Locate objects or controls", "emptyHint": "Choose one static image, describe the target, then choose boxes or points.", "footnote": "Coordinates refer to the complete image after applying its orientation." },
+      "imageGenerate": {
+        "inputTitle": "Test image generation",
+        "inputPlaceholder": "Describe the image you want the runtime to render…",
+        "primaryLabel": "Generate image",
+        "primaryRunningLabel": "Generating…",
+        "emptyTitle": "Waiting for render",
+        "emptyHint": "The generated image will appear here once the job returns.",
+        "footnote": "The runtime queues a render job and returns typed artifacts."
+      },
+      "videoGenerate": {
+        "inputTitle": "Test video generation",
+        "inputPlaceholder": "Describe the short clip you want to generate…",
+        "primaryLabel": "Generate video",
+        "primaryRunningLabel": "Generating…",
+        "emptyTitle": "Waiting for render",
+        "emptyHint": "The generated clip will appear here once the job returns.",
+        "footnote": "Text-to-video runs as a runtime job; typed artifacts are returned."
+      },
+      "musicGenerate": {
+        "inputTitle": "Test music generation",
+        "inputPlaceholder": "Describe the song, genre, instrumentation, and vocal style…",
+        "primaryLabel": "Generate music",
+        "primaryRunningLabel": "Generating…",
+        "emptyTitle": "Waiting for music",
+        "emptyHint": "The Runtime-custodied WAV will be adopted here after the job completes.",
+        "footnote": "Progress is unavailable for MiniMax-Music3 Preview; cancel stops the active CLI process."
+      }
+    },
+    "parameters": {
+      "videoModeT2v": "Text to video",
+      "videoModeReference": "Single reference image",
+      "chooseImageFile": "Choose and upload image",
+      "clearReferenceImage": "Clear reference image",
+      "uploadingImage": "Uploading image…",
+      "imageFileTooLarge": "Image files must be non-empty and not exceed 32 MiB.",
+      "imageFileMimeUnsupported": "Choose a PNG, JPEG, WebP, or GIF image.",
+      "fields": {
+        "negativePrompt": "Negative prompt",
+        "count": "Count",
+        "size": "Size",
+        "aspectRatio": "Aspect ratio",
+        "quality": "Quality",
+        "style": "Style",
+        "referenceImage": "Reference image URL",
+        "mask": "Mask URL",
+        "mode": "Mode",
+        "referenceArtifactId": "Reference artifact ID",
+        "referenceImageFile": "Local reference image",
+        "resolution": "Resolution",
+        "frames": "Frames",
+        "generateAudio": "Generate audio",
+        "ratio": "Ratio",
+        "durationSec": "Duration (seconds)",
+        "fps": "FPS",
+        "cameraFixed": "Fixed camera",
+        "watermark": "Watermark",
+        "draft": "Draft",
+        "returnLastFrame": "Return last frame",
+        "serviceTier": "Service tier",
+        "executionExpiresAfterSec": "Execution expiry (seconds)",
+        "lyrics": "Lyrics"
+      }
+    }
+  }
+}

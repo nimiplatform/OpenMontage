@@ -1,0 +1,40 @@
+name: nimi-image-explainer
+version: "1.0"
+description: >
+  Three-scene image explainer from supplied facts, operated inside the Nimi App.
+  The App controls Nimi text/image/speech consumption; Python validates checkpoints
+  and performs local media work. No research, music, or arbitrary generated code is implied.
+category: generated
+stability: beta
+default_checkpoint_policy: guided
+required_skills:
+  - pipelines/nimi-image-explainer/scene-director
+  - pipelines/nimi-image-explainer/asset-director
+  - pipelines/nimi-image-explainer/compose-director
+stages:
+  - name: scene_plan
+    skill: pipelines/nimi-image-explainer/scene-director
+    produces: [scene_plan]
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus: [supplied facts, narration, three coherent image descriptions]
+    success_criteria: [schema-valid scene_plan, explicit approval before consumption]
+  - name: assets
+    skill: pipelines/nimi-image-explainer/asset-director
+    required_artifacts_in: [scene_plan]
+    produces: [asset_manifest]
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus: [real Nimi artifacts, image and narration coverage, preserved job references]
+    success_criteria: [three images and three narrations, explicit approval before composition]
+  - name: compose
+    skill: pipelines/nimi-image-explainer/compose-director
+    required_artifacts_in: [scene_plan, asset_manifest]
+    produces: [render_report]
+    tools_available: [audio_mixer, video_compose]
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus: [actual audio duration, 720p output, decodable video and audio]
+    success_criteria: [real local render, Nimi asset storage, playable export]

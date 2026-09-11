@@ -9,6 +9,8 @@
 
 <h1 align="center">OpenMontage</h1>
 
+> This fork is being integrated as the Nimi App `openmontage.studio`. The official app-tools shell and Windows base build are in place; the video-production workflow is still being connected. See [Nimi App development](NIMI_APP.md) for the current setup and verification limits. The upstream guide below describes the existing agent-driven production system.
+
 <p align="center"><strong>The first open-source, agentic video production system.</strong></p>
 
 <p align="center">

@@ -1,0 +1,33 @@
+app_id: openmontage.studio
+display_name: OpenMontage
+version: 0.1.0
+profile: standalone
+npm_package_name: openmontage-nimi-app
+cargo_package_name: openmontage-nimi-app-shell
+tauri_identifier: ai.nimi.apps.openmontage.studio
+package_author: OpenMontage contributors
+submission_role: developer-submitted-input
+capability_contract_refs:
+  - text.generate
+  - image.generate
+  - audio.synthesize
+required_standardized_feature_refs: []
+storage_policy:
+  kind: nimi-mediated-default
+support_manifest:
+  diagnostics_bundle_fields:
+    - app_version
+    - runtime_status
+  redaction_rules:
+    - credentials
+  user_visible_issue_categories:
+    - startup
+    - runtime
+  escalation_path: README.md#support
+  kill_switch_visibility: visible
+  recovery_instructions: Restart the App from Nimi. If the problem persists, reinstall the current admitted release.
+review_inputs:
+  manifest: nimi.app.yaml
+  build_profile: .nimi/config/build-profile.yaml
+  scaffold_boundary: .nimi/contracts/scaffold-boundary.yaml
+admission_truth: platform-owned-after-review

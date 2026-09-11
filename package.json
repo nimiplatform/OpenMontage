@@ -1,0 +1,62 @@
+{
+  "name": "openmontage-nimi-app",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "packageManager": "pnpm@10.34.5",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "protobufjs"
+    ]
+  },
+  "scripts": {
+    "dev": "nimi-app dev --shell electron",
+    "dev:renderer": "vite --host 127.0.0.1 --port 1461 --strictPort",
+    "dev:shell": "nimi-app dev",
+    "dev:electron": "nimi-app dev --shell electron",
+    "sync": "nimi-app sync",
+    "check": "nimi-app check",
+    "test": "nimi-app test",
+    "test:app": "node --test test/*.test.mjs",
+    "test:media": "node --test test/media/*.test.mjs",
+    "app:build": "nimi-app build",
+    "pack": "nimi-app pack",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json && node scripts/bundle-electron-preload.mjs",
+    "build:electron:production": "node scripts/clean-electron-production.mjs && pnpm run build && pnpm run build:electron && node scripts/package-electron-production.mjs",
+    "build:tauri:production": "tauri build",
+    "postinstall": "install-electron --no",
+    "validate": "node scripts/validate.mjs"
+  },
+  "dependencies": {
+    "i18next": "^25.10.10",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "@nimiplatform/sdk": "^0.11.0",
+    "@nimiplatform/kit": "^0.7.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^42.10.1",
+    "esbuild": "^0.28.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.6",
+    "yaml": "^2.9.0",
+    "@nimiplatform/app-tools": "^0.5.1",
+    "@nimiplatform/nimi-coding": "0.6.2"
+  },
+  "author": "OpenMontage contributors"
+}

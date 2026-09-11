@@ -104,3 +104,11 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Nimi App development and production output
+dist-electron/
+dist-electron-package/
+src-tauri/target/
+.nimi/local/
+.turbo/
+.vite/

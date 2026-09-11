@@ -127,6 +127,15 @@ GENERIC_HD = MediaProfile(
     notes="Generic HD output (no platform-specific constraints)",
 )
 
+GENERIC_720P = MediaProfile(
+    name="generic_720p",
+    width=1280, height=720,
+    aspect_ratio=AspectRatio.LANDSCAPE_16_9,
+    fps=30, codec="libx264", audio_codec="aac", crf=23,
+    caption_format="srt",
+    notes="720p composition for the Nimi App preview and export",
+)
+
 
 # ---- Profile registry ----
 
@@ -134,7 +143,7 @@ ALL_PROFILES: dict[str, MediaProfile] = {
     p.name: p for p in [
         YOUTUBE_LANDSCAPE, YOUTUBE_4K, YOUTUBE_SHORTS,
         INSTAGRAM_REELS, INSTAGRAM_FEED,
-        TIKTOK, LINKEDIN, CINEMATIC, GENERIC_HD,
+        TIKTOK, LINKEDIN, CINEMATIC, GENERIC_HD, GENERIC_720P,
     ]
 }
 
