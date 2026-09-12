@@ -12,16 +12,24 @@ The renderer runs inside the Desktop-supervised Electron Nimi App. The first rel
 
 ## Users and purpose
 
-Creators turn supplied material into an explainer video through a proposal, scene review, AI image/voice generation and local composition. The completed App should work without an external coding assistant or a manually installed development environment.
+Creators choose an OpenMontage production workflow, shape supplied material into a script and scene plan, review source/generated media, edit and compose their deliverables. The completed App should work without an external coding assistant or a manually installed development environment.
 
 ## Confirmed scope
+
+The final goal is to replace the relevant platform/AI substrate with Nimi while retaining and presenting OpenMontage's existing product capabilities as fully as practical. Existing production workflows, tools, editing and outputs are the migration baseline. A single working explainer and a restored visual shell do not complete the product migration.
 
 The first product flow is an image-based explainer with narration and an explicit approval before asset generation. Text, image and speech consumption use the protected Nimi Local App client; FFmpeg and Remotion stay local media tools. Nimi and OpenMontage accounts are separate. No OpenMontage registration or team roles are introduced for this integration.
 
 ## Interface direction
 
-Extend the existing Nimi Kit interface with the production flow described in the accepted plan. Use Kit controls and the OpenMontage name/assets. The task is implementation, not a rebrand or a new visual-concept exercise. Chinese copy serves the current development acceptance; further locale coverage is not yet verified.
+Preserve OpenMontage / Backlot as the product foundation: dark editorial workspace, paper screenplay, stage rail, storyboard filmstrip, project library, decisions and activity, results and revisions. Reuse the applicable code and visual language in `backlot/ui` and state aggregation in `backlot/state.py`. Kit supplies platform integration, AIConfig and suitable shared controls; it does not replace OpenMontage's identity with a generic Kit form. Chinese copy serves the current acceptance.
+
+The Backlot project library, screenplay, stage rail, storyboard review, decisions/activity and results now replace the initial engineering form. The original pipeline catalogue and hybrid's seven stages are the next integration slice, including video, source footage and actual editing. Prototype scene-count and duration controls are not final product limits. M1 is an intermediate technical milestone. Migrating the remaining original capabilities is core work for this request, not an optional post-release extension; outstanding capability gaps must stay visible and must not be redefined away.
 
 ## Evidence and limits
 
-The official base shell builds and has been launched through Desktop. The local media worker has rendered real fixture inputs to a valid 720p MP4. These are separate from Nimi AI generation and from formal release/installation acceptance, which remain unverified.
+Protected Nimi generation, a user-reviewed 720p narrated sample, storage, checkpoints, Job cancellation/recovery and production build/pack have passed their scoped checks. The restored Backlot UI has run a real four-scene project through editing, approval, generation, selective revision, composition, playback and export. Confirmed decisions survive revisions and refresh. Complete P2, account/session changes and formal release/installation acceptance remain unfinished. Decisions and activity reflect real product actions; costs are unavailable unless an actual source supplies them.
+
+A basic original hybrid task has now run its seven stages with imported source video, real Nimi-generated video/image/narration, source trims, scaling/motion, local composition and project export. The user confirmed the 15-second result's moving image and narration. This validates that bounded path; the remaining original workflows and tools are still core unfinished migration work.
+
+Source text transcription and paragraph/manual subtitle editing now extend the same Backlot workspace. A real Nimi transcription produced editable Chinese text; failed replacement requests preserve the saved result. Subtitle cues use actual narration placement/duration, support SRT/VTT export and local burn/remove, and distinguish editable preview from an already captioned output. This is paragraph timing, not automatic word alignment. Multilingual dubbing and the remaining specialized workflows stay in the migration scope.

@@ -1,6 +1,23 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { newProductionProject, ProductionProjectStore, serializeProject } from '../src/production/project-store.ts';
+import { newProductionProject, ProductionProjectStore, recordProductionDecision, serializeProject, summarizeProject } from '../src/production/project-store.ts';
+
+test('confirmed decision changes append history while reconfirming identical choices preserves it', () => {
+  const choice = { at: '2026-09-12T00:00:00Z', models: 'Selected by the user', voice: 'voice-a', renderer: 'Remotion', frame: '1280 × 720', scene_count: 4 };
+  const project = { ...newProductionProject(), decisions: [choice] };
+  assert.equal(recordProductionDecision(project, { ...choice, at: '2026-09-12T01:00:00Z' }), project.decisions);
+  const revised = recordProductionDecision(project, { ...choice, at: '2026-09-12T02:00:00Z', scene_count: 5 });
+  assert.equal(revised.length, 2);
+  assert.deepEqual(revised[0], choice);
+  assert.equal(project.decisions.length, 1);
+});
+
+test('an empty project library entry contains only JSON values accepted by storage', () => {
+  const summary = summarizeProject(newProductionProject());
+  assert.deepEqual(JSON.parse(JSON.stringify(summary)), summary);
+  assert.equal(summary.sceneCount, 0);
+  assert.equal(summary.hasOutput, false);
+});
 
 test('project persistence keeps job references and submission uncertainty, excluding binary previews', () => {
   const project = newProductionProject();

@@ -8,6 +8,7 @@ import { pipeline } from 'node:stream/promises';
 const PYTHON_VERSION = '3.14.4';
 const NODE_VERSION = '24.15.0';
 const PIP_VERSION = '26.2.1';
+const FFMPEG_VERSION = '9.0.1';
 
 async function run(command, args, cwd, environment = process.env, capture = false) {
   return new Promise((resolve, reject) => {
@@ -38,6 +39,19 @@ async function extract(archive, destination, cwd) {
   });
 }
 
+export async function prepareFFmpeg(appRoot) {
+  const buildRoot = path.resolve(appRoot, '.nimi/local/media-build');
+  const target = path.join(buildRoot, `ffmpeg-${FFMPEG_VERSION}-essentials_build`);
+  try { await access(path.join(target, 'bin/ffmpeg.exe')); await access(path.join(target, 'bin/ffprobe.exe')); return target; } catch { /* First development or production build. */ }
+  const downloads = path.join(buildRoot, 'downloads');
+  await mkdir(downloads, { recursive: true });
+  const filename = `ffmpeg-${FFMPEG_VERSION}-essentials_build.zip`;
+  const archive = await download(`https://github.com/GyanD/codexffmpeg/releases/download/${FFMPEG_VERSION}/${filename}`, path.join(downloads, filename));
+  await extract(archive, buildRoot, appRoot);
+  await access(path.join(target, 'bin/ffmpeg.exe'));
+  return target;
+}
+
 export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
   if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('OpenMontage media packaging currently supports Windows x86_64.');
   const buildRoot = path.resolve(appRoot, '.nimi/local/media-build');
@@ -56,23 +70,32 @@ export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
     await extract(nodeArchive, nodeExtract, appRoot);
     const nodeRoot = path.join(runtimeRoot, 'node');
     await cp(path.join(nodeExtract, `node-v${NODE_VERSION}-win-x64`), nodeRoot, { recursive: true });
+    const ffmpeg = await prepareFFmpeg(appRoot);
+    await cp(ffmpeg, path.join(runtimeRoot, 'ffmpeg'), { recursive: true, filter: (source) => path.basename(source) !== 'ffplay.exe' });
     const python = path.join(pythonRoot, 'python.exe');
     const node = path.join(nodeRoot, 'node.exe');
     const sitePackages = path.join(pythonRoot, 'Lib/site-packages');
-    const pipMetadataResponse = await fetch(`https://pypi.org/pypi/pip/${PIP_VERSION}/json`);
-    if (!pipMetadataResponse.ok) throw new Error('Unable to resolve the pinned pip build dependency.');
-    const pipMetadata = await pipMetadataResponse.json();
-    const pipWheel = pipMetadata.urls.find((entry) => entry.filename === `pip-${PIP_VERSION}-py3-none-any.whl`);
-    if (!pipWheel) throw new Error('The pinned pip wheel is unavailable.');
-    const pipArchive = await download(pipWheel.url, path.join(downloads, `pip-${PIP_VERSION}.zip`));
+    const pipArchive = path.join(downloads, `pip-${PIP_VERSION}.zip`);
+    // Like the Python and Node archives, an already cached pinned wheel needs
+    // no online lookup. Resolve PyPI metadata only on the first download.
+    const pipCached = await access(pipArchive).then(() => true, () => false);
+    if (!pipCached) {
+      const pipMetadataResponse = await fetch(`https://pypi.org/pypi/pip/${PIP_VERSION}/json`);
+      if (!pipMetadataResponse.ok) throw new Error('Unable to resolve the pinned pip build dependency.');
+      const pipMetadata = await pipMetadataResponse.json();
+      const pipWheel = pipMetadata.urls.find((entry) => entry.filename === `pip-${PIP_VERSION}-py3-none-any.whl`);
+      if (!pipWheel) throw new Error('The pinned pip wheel is unavailable.');
+      await download(pipWheel.url, pipArchive);
+    }
     await extract(pipArchive, sitePackages, appRoot);
     await writeFile(path.join(pythonRoot, 'python314._pth'), 'python314.zip\n.\nLib/site-packages\n../app\nimport site\n');
     const environment = { ...process.env, PATH: nodeRoot + path.delimiter + process.env.PATH, PYTHONNOUSERSITE: '1', PYTHONDONTWRITEBYTECODE: '1' };
     await run(python, ['-m', 'pip', 'install', '--disable-pip-version-check', '--no-compile', '--no-warn-script-location', '--only-binary=:all:', '--target', sitePackages, '-r', path.join(appRoot, 'app_runtime/requirements-media.txt')], appRoot, environment);
 
     const files = [
-      'app_runtime/__init__.py', 'app_runtime/media_worker.py', 'app_runtime/checkpoint_worker.py', 'app_runtime/requirements-media.txt',
+      'app_runtime/__init__.py', 'app_runtime/media_worker.py', 'app_runtime/checkpoint_worker.py', 'app_runtime/pipeline_context.py', 'app_runtime/requirements-media.txt',
       'tools/__init__.py', 'tools/base_tool.py', 'tools/audio/__init__.py', 'tools/audio/audio_mixer.py', 'tools/video/__init__.py', 'tools/video/video_compose.py',
+      'tools/subtitle/__init__.py', 'tools/subtitle/subtitle_gen.py',
       'lib/__init__.py', 'lib/paths.py', 'lib/events.py', 'lib/media_profiles.py', 'lib/checkpoint.py', 'lib/pipeline_loader.py',
       'schemas/__init__.py', 'schemas/artifacts/__init__.py', 'schemas/artifacts/edit_decisions.schema.json',
       'schemas/artifacts/scene_plan.schema.json', 'schemas/artifacts/asset_manifest.schema.json', 'schemas/artifacts/render_report.schema.json',
@@ -86,6 +109,9 @@ export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
       const destination = path.join(sourceRoot, relative);
       await mkdir(path.dirname(destination), { recursive: true });
       await copyFile(path.join(appRoot, relative), destination);
+    }
+    for (const relative of ['pipeline_defs', 'skills/pipelines', 'schemas/artifacts']) {
+      await cp(path.join(appRoot, relative), path.join(sourceRoot, relative), { recursive: true });
     }
     const composer = path.join(sourceRoot, 'remotion-composer');
     process.stdout.write('[OpenMontage] Building the bundled image composition\n');

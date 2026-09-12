@@ -145,7 +145,7 @@ try {
     : path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.exe`));
   await prepareMediaRuntime(appRoot, path.join(expectedPackageRoot, 'resources'));
   await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['--test', 'test/media/checkpoint.test.mjs', 'test/media/media-runtime.test.mjs'], { cwd: appRoot, stdio: 'inherit', windowsHide: true });
+    const child = spawn(process.execPath, ['--test', 'test/media/checkpoint.test.mjs', 'test/media/media-runtime.test.mjs', 'test/media/subtitles.test.mjs'], { cwd: appRoot, stdio: 'inherit', windowsHide: true });
     child.once('error', reject);
     child.once('close', (code) => code === 0 ? resolve() : reject(new Error(`Packaged media tests failed (${code}).`)));
   });

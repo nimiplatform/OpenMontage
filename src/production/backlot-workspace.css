@@ -1,0 +1,202 @@
+/* App interaction layer over the original backlot/ui/board.css visual system. */
+@font-face { font-family: 'Courier Prime'; src: url('../../assets/fonts/courier-prime.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Courier Prime'; src: url('../../assets/fonts/courier-prime-700.ttf') format('truetype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('../../assets/fonts/jetbrains-mono.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('../../assets/fonts/jetbrains-mono-600.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('../../assets/fonts/inter.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('../../assets/fonts/inter-600.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+.backlot-app.backlot-app {
+  --text-3: #9999a4;
+  --sans: Inter, "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Microsoft YaHei", ui-monospace, monospace;
+  --screenplay: "Courier Prime", "Microsoft YaHei", "Courier New", monospace;
+  color-scheme: dark;
+  min-height: 100vh;
+  width: 100%;
+  accent-color: #f0a83c;
+  caret-color: #f0a83c;
+  overflow-wrap: anywhere;
+}
+.backlot-app .wrap { min-height: 100vh; padding-bottom: 28px; }
+.backlot-app ::selection { background: #f0a83c; color: #18130d; }
+.backlot-app :focus-visible { outline: 2px solid #f0a83c; outline-offset: 4px; }
+.backlot-app button { font: inherit; color: inherit; cursor: pointer; }
+.backlot-app button:disabled { opacity: .45; cursor: not-allowed; }
+.backlot-app .bl-button, .backlot-app .bl-primary, .backlot-app .bl-script-actions button {
+  min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 13px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface-2); font-size: 13px; line-height: 1.4; flex-shrink: 0;
+  transition: background-color .16s, border-color .16s;
+}
+.backlot-app .bl-button:hover:not(:disabled) { background: var(--surface-3); border-color: var(--text-3); }
+.backlot-app .bl-primary { background: var(--amber); color: #22180a; border-color: transparent; font-weight: 650; }
+.backlot-app .bl-primary:hover:not(:disabled) { background: #ffc168; }
+.backlot-app .slate { gap: 18px; min-height: 94px; }
+.backlot-app .slate > div:first-of-type { min-width: 0; }
+.backlot-app .slate h1 { letter-spacing: .03em; line-height: 1.4; }
+.backlot-app .bl-brand-icon { color: var(--text-2); flex-shrink: 0; }
+.backlot-app .bl-wordmark { display: block; font: 11px var(--mono); color: var(--text-3); text-decoration: none; letter-spacing: .12em; margin-bottom: 5px; }
+.backlot-app .bl-wordmark:hover { color: var(--amber); }
+.backlot-app .bl-library-intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 48px 0 24px; }
+.backlot-app .bl-library-intro h2 { font-size: clamp(23px, 2.4vw, 32px); font-weight: 500; letter-spacing: -.02em; margin-bottom: 12px; }
+.backlot-app .bl-library-intro p, .backlot-app .bl-muted { color: var(--text-2); font-size: 13px; line-height: 1.65; }
+.backlot-app .lib-grid { grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); max-width: 1100px; gap: 24px; }
+.backlot-app .lib-card { text-align: left; padding: 0; }
+.backlot-app .lib-poster .lp-txt { flex-direction: column; gap: 14px; color: var(--text-3); }
+.backlot-app .lib-poster .lp-live { font-size: 12px; color: #ffe0ac; background: #141111df; }
+.backlot-app .lib-body { padding: 20px; }
+.backlot-app .lib-body h3 { font-size: 16px; margin-bottom: 14px; letter-spacing: .02em; }
+.backlot-app .lb-meta { color: var(--text-2); font-size: 12px; }
+.backlot-app .lb-meta time { margin-left: auto; }
+.backlot-app .mini-rail { display: flex; gap: 5px; margin-top: 20px; }
+.backlot-app .mini-rail i { flex: 1; height: 3px; background: var(--surface-3); }
+.backlot-app .mini-rail i.d { background: var(--green); }
+.backlot-app .rail { max-width: 1050px; margin: 0 auto; padding: 30px 0 28px; }
+.backlot-app .stage { border: 0; background: transparent; padding: 0 8px; }
+.backlot-app .stage .name { font-size: 13px; color: var(--text-2); }
+.backlot-app .stage .sub { font-size: 12px; }
+.backlot-app .stage[aria-current=step] .name { color: var(--amber); }
+.backlot-app .bl-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; margin-bottom: 28px; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+.backlot-app .bl-toolbar nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.backlot-app .bl-toolbar button { padding: 9px 13px; font-size: 13px; border: 0; border-radius: 5px; background: transparent; color: var(--text-2); }
+.backlot-app .bl-toolbar button[aria-current=page] { background: var(--surface-3); color: var(--text); }
+.backlot-app .bl-toolbar > span { color: var(--text-3); font-size: 12px; }
+.backlot-app .bl-run { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 14px 18px; margin: 20px 0; background: var(--amber-dim); border: 1px solid #6a4821; border-radius: 6px; }
+.backlot-app .bl-run .live { letter-spacing: 0; font-size: 13px; }
+.backlot-app .bl-run > button { display: inline-flex; gap: 8px; background: transparent; border: 0; }
+.backlot-app .board { grid-template-columns: minmax(0, 1fr) 310px; gap: 32px; }
+.backlot-app .script-card { width: 100%; max-width: 700px; padding: 50px 44px 30px; margin: 0 auto; }
+.backlot-app .script-card .sp-title { font-size: 20px; letter-spacing: .04em; padding: 0 50px; }
+.backlot-app .script-card .sp-meta { margin: 10px 0 30px; font-size: 12px; }
+.backlot-app .script-card .sp-slug { margin-top: 28px; font-size: 14px; letter-spacing: 0; }
+.backlot-app .script-card .sp-action { font-size: 15px; line-height: 1.9; }
+.backlot-app .script-status { top: 18px; right: 20px; opacity: 1; letter-spacing: .04em; }
+.backlot-app .bl-script-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 30px; }
+.backlot-app .bl-script-actions button { color: var(--cream-ink); background: transparent; border-color: #ad9b78; font-size: 12px; }
+.backlot-app aside .panel + .panel { margin-top: 20px; }
+.backlot-app .panel-head h2 { font-size: 13px; letter-spacing: .07em; }
+.backlot-app .panel-head .meta { font-size: 10px; }
+.backlot-app .d-pick { overflow-wrap: anywhere; line-height: 1.65; }
+.backlot-app .bl-activity { max-height: 330px; overflow-y: auto; }
+.backlot-app .bl-event { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 12px; }
+.backlot-app .bl-event:last-child { border-bottom: 0; }
+.backlot-app .bl-event time { font: 11px var(--mono); color: var(--text-3); }
+.backlot-app .bl-event details { color: var(--text-2); margin-top: 5px; }
+.backlot-app summary { cursor: pointer; font-size: 12px; }
+.backlot-app .bl-storyboard { margin-top: 45px; }
+.backlot-app .section-title { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.backlot-app .section-title h2 { font: 13px var(--mono); letter-spacing: .08em; color: var(--text-2); }
+.backlot-app .section-title .meta { color: var(--text-3); font-size: 12px; margin-left: auto; }
+.backlot-app .filmstrip { padding-top: 28px; padding-bottom: 30px; gap: 18px; }
+.backlot-app .scene-card { width: 252px; }
+.backlot-app .scene-card .thumb { width: 100%; height: 142px; padding: 0; }
+.backlot-app .thumb.selected { border-color: var(--amber); }
+.backlot-app .scene-card .sc-slate { font-size: 11px; }
+.backlot-app .scene-card h3 { font-size: 14px; font-weight: 500; margin: 12px 0 6px; }
+.backlot-app .scene-card audio { width: 100%; height: 32px; margin-top: 9px; }
+.backlot-app .bl-scene-caption { font-size: 12px; color: var(--text-2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.backlot-app .bl-media-empty { min-height: 142px; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; color: var(--text-3); font-size: 12px; }
+.backlot-app .bl-approval { display: flex; gap: 24px; justify-content: space-between; align-items: center; margin-top: 24px; padding: 20px; border: 1px solid #70502c; border-radius: 8px; background: var(--amber-dim); }
+.backlot-app .bl-approval h3 { font-size: 16px; font-weight: 500; margin-bottom: 10px; }
+.backlot-app .bl-approval p { font-size: 12px; line-height: 1.7; margin-top: 6px; }
+.backlot-app .bl-approval-note { display: flex; gap: 10px; align-items: center; color: var(--text-2); font-size: 13px; margin: 24px 0; }
+.backlot-app .bl-approval-note svg { color: var(--green); flex-shrink: 0; }
+.backlot-app .bl-brief { max-width: 900px; margin: 10px auto 60px; }
+.backlot-app .bl-brief .panel-body { padding: 28px; }
+.backlot-app .bl-brief p { line-height: 1.8; font-size: 14px; margin-bottom: 20px; }
+.backlot-app .bl-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.backlot-app label { display: block; color: var(--text-2); font-size: 13px; margin: 20px 0 8px; }
+.backlot-app textarea, .backlot-app input, .backlot-app select { display: block; width: 100%; font: inherit; font-size: 14px; line-height: 1.7; border: 1px solid #3b3b43; border-radius: 6px; background: var(--surface-2); color: var(--text); padding: 10px 12px; }
+.backlot-app textarea { resize: vertical; }
+.backlot-app select { margin-top: 8px; min-height: 44px; }
+.backlot-app input::placeholder, .backlot-app textarea::placeholder { color: var(--text-3); }
+.backlot-app .script-card input, .backlot-app .script-card textarea { color: var(--cream-ink); background: #fff6e4; border-color: #baab8b; font: inherit; margin: 10px 0; }
+.backlot-app .bl-error { padding: 14px 18px; margin: 18px 0; color: #ffb8b2; background: #361c20; border-radius: 6px; font-size: 14px; }
+.backlot-app .bl-review-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px; padding: 25px; }
+.backlot-app .bl-review-grid label:first-child { margin-top: 0; }
+.backlot-app .bl-large-image { width: 100%; position: relative; padding: 0; border: 0; border-radius: 7px; overflow: hidden; }
+.backlot-app .bl-large-image img { display: block; width: 100%; }
+.backlot-app .bl-large-image svg { position: absolute; bottom: 12px; right: 12px; color: white; filter: drop-shadow(0 2px 3px black); }
+.backlot-app .bl-review-grid .bl-muted { margin: 16px 0; }
+.backlot-app .bl-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.backlot-app .bl-job-details { margin-top: 22px; color: var(--text-3); font-size: 12px; overflow-wrap: anywhere; }
+.backlot-app .bl-job-details p { margin: 8px 0; }
+.backlot-app .bl-results { margin-top: 50px; }
+.backlot-app .bl-render { max-width: 1000px; margin: 24px auto; }
+.backlot-app .bl-render video { width: 100%; max-height: 650px; background: black; display: block; border-radius: 8px; }
+.backlot-app .bl-render-footer, .backlot-app .bl-render-action { display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 13px; color: var(--text-2); padding-top: 16px; }
+.backlot-app .bl-render-action { max-width: 1000px; margin: 20px auto; }
+.backlot-app .bl-empty { display: flex; align-items: center; flex-direction: column; gap: 18px; padding: 60px 20px; color: var(--text-2); text-align: center; }
+.backlot-app .bl-empty h2 { font-size: 24px; font-weight: 500; }
+.backlot-app .bl-empty h3 { font-size: 20px; }
+.backlot-app .bl-empty p { font-size: 14px; }
+.backlot-app .bl-footer { display: flex; justify-content: space-between; gap: 18px; margin-top: 70px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: var(--text-3); font-size: 11px; }
+.backlot-app .bl-lightbox { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; border: 0; margin: 0; z-index: 100; background: #070708f5; display: flex; align-items: center; justify-content: center; padding: 60px 30px; }
+.backlot-app .bl-lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.backlot-app .bl-lightbox button { position: absolute; top: 20px; right: 25px; padding: 10px; background: #202027; color: white; border-radius: 6px; border: 1px solid #45454e; }
+.backlot-app .bl-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 1000px) {
+  .backlot-app .board { grid-template-columns: minmax(0, 1fr) 270px; gap: 22px; }
+  .backlot-app .script-card { padding: 44px 26px 28px; }
+  .backlot-app .script-card .sp-title { padding: 0 30px; }
+  .backlot-app .bl-approval { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 760px) {
+  .backlot-app .board { display: block; }
+  .backlot-app .board aside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+  .backlot-app aside .panel + .panel { margin-top: 0; }
+  .backlot-app .slate { flex-wrap: wrap; }
+  .backlot-app .slate > div:first-of-type { flex: 1; }
+  .backlot-app .slate .chip, .backlot-app .slate .live { display: none; }
+  .backlot-app .stage { flex: 1; min-width: 90px; }
+  .backlot-app .bl-review-grid, .backlot-app .bl-fields { grid-template-columns: 1fr; gap: 12px; }
+  .backlot-app .bl-toolbar { align-items: start; flex-direction: column; }
+  .backlot-app .bl-library-intro { align-items: start; flex-direction: column; margin-top: 32px; }
+  .backlot-app .bl-render-action { flex-direction: column; align-items: start; }
+}
+@media (max-width: 520px) {
+  .backlot-app .board aside { display: block; }
+  .backlot-app aside .panel + .panel { margin-top: 16px; }
+  .backlot-app .script-card { padding: 48px 20px 22px; }
+  .backlot-app .script-card .sp-title { padding: 0; }
+  .backlot-app .script-card .sp-action { font-size: 14px; }
+  .backlot-app .bl-brief .panel-body, .backlot-app .bl-review-grid { padding: 18px; }
+  .backlot-app .bl-toolbar nav { gap: 0; }
+  .backlot-app .bl-toolbar button { padding: 9px; }
+  .backlot-app .section-title { flex-wrap: wrap; }
+  .backlot-app .section-title .meta { margin-left: 0; }
+  .backlot-app .bl-run { flex-wrap: wrap; }
+  .backlot-app .bl-footer { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .backlot-app *, .backlot-app *::before, .backlot-app *::after { animation: none !important; transition: none !important; } }
+
+.backlot-app .bl-pipeline-row { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 30px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+.backlot-app .bl-pipeline-row h3 { font-size: 19px; margin-bottom: 8px; }
+.backlot-app .bl-pipeline-row p { max-width: 75ch; color: var(--text-2); font-size: 13px; line-height: 1.7; }
+.backlot-app .bl-pipeline-row details { margin-top: 12px; color: var(--text-3); }
+.backlot-app .bl-pipeline-row > div:last-child { display: flex; flex-direction: column; align-items: end; gap: 16px; justify-content: center; }
+.backlot-app .bl-workflow-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 20px; }
+.backlot-app .bl-workflow-heading h2 { font-size: 23px; font-weight: 500; }
+.backlot-app .bl-workflow-heading p { color: var(--text-2); font-size: 13px; margin-top: 8px; }
+.backlot-app .bl-workflow-document { max-width: none; }
+.backlot-app .bl-workflow-document .sp-title { margin-bottom: 28px; }
+.backlot-app .bl-artifact-points { padding-left: 22px; line-height: 1.85; }
+.backlot-app .bl-artifact-item { padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
+.backlot-app .bl-artifact-item h4 { font-size: 14px; margin-bottom: 8px; }
+.backlot-app .bl-artifact-item p { font-size: 14px; line-height: 1.7; }
+.backlot-app .bl-check { display: flex; align-items: start; gap: 10px; line-height: 1.7; }
+.backlot-app .bl-check input { width: 17px; height: 17px; margin-top: 3px; flex: none; }
+.backlot-app .bl-source-input { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
+.backlot-app .bl-source-input input[type=file] { width: auto; max-width: 260px; border: 0; padding: 0; background: transparent; }
+.backlot-app .bl-source-row { display: flex; justify-content: space-between; gap: 20px; font-size: 13px; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
+.backlot-app .bl-job-details pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 450px; overflow: auto; margin-top: 12px; font: 11px/1.6 var(--mono); }
+.backlot-app .bl-original-workflow .main-col > .filmstrip { max-width: 100%; }
+.backlot-app .bl-original-workflow .scene-card .thumb { object-fit: cover; }
+.backlot-app .bl-original-workflow .bl-approval { flex-direction: column; align-items: stretch; }
+@media (max-width: 700px) { .backlot-app .bl-pipeline-row { grid-template-columns: 1fr; gap: 14px; } .backlot-app .bl-pipeline-row > div:last-child { flex-direction: row; align-items: center; justify-content: space-between; } .backlot-app .bl-workflow-heading { align-items: start; flex-direction: column; } }
+
+.backlot-app .bl-subtitle-preview { margin: 24px 0; max-width: 900px; }
+.backlot-app .bl-subtitle-preview p { padding: 12px 18px; }
+.backlot-app .bl-caption-row { display: grid; grid-template-columns: 24px 100px 100px minmax(0, 1fr) 44px; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.backlot-app .bl-source-transcript .bl-actions { margin-top: 14px; }
+@media (max-width: 700px) { .backlot-app .bl-caption-row { grid-template-columns: 24px 1fr 1fr 44px; } .backlot-app .bl-caption-row label:nth-of-type(3) { grid-column: 2 / 4; grid-row: 2; } }

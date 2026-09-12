@@ -14,6 +14,7 @@
     ]
   },
   "scripts": {
+    "predev": "node --input-type=module -e \"import { prepareFFmpeg } from './scripts/prepare-media-runtime.mjs'; await prepareFFmpeg(process.cwd());\"",
     "dev": "nimi-app dev --shell electron",
     "dev:renderer": "vite --host 127.0.0.1 --port 1461 --strictPort",
     "dev:shell": "nimi-app dev",

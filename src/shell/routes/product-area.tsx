@@ -1,5 +1,5 @@
-import { ProductionWorkspace } from '../../production/production-workspace.js';
+import { BacklotWorkspace } from '../../production/backlot-workspace.js';
 
 export function ProductArea() {
-  return <ProductionWorkspace />;
+  return <BacklotWorkspace />;
 }

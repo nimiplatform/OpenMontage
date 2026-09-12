@@ -8,7 +8,7 @@ import { MediaRenderer, resolveMediaRuntimePaths } from '../../src-electron/medi
 test('the real checkpoint writer rejects skipped approval and missing predecessors', async () => {
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'openmontage-checkpoint-test-'));
   const renderer = new MediaRenderer(resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: scratch, packaged: true, resourcesPath: path.join(process.cwd(), 'dist-electron-package/openmontage-nimi-app-shell-win32-x64/resources') }));
-  const input = { projectId: 'checkpoint-contract-test', title: 'Checkpoint validation fixture', stage: 'scene_plan', status: 'completed', artifacts: {}, humanApproved: false, checkpoints: {} };
+  const input = { pipelineId: 'nimi-image-explainer', projectId: 'checkpoint-contract-test', title: 'Checkpoint validation fixture', stage: 'scene_plan', status: 'completed', artifacts: {}, humanApproved: false, checkpoints: {} };
   try {
     await assert.rejects(renderer.checkpoint(input), /GATE VIOLATION/);
     await assert.rejects(renderer.checkpoint({ ...input, stage: 'compose' }), /PREREQUISITE VIOLATION/);

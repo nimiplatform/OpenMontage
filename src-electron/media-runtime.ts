@@ -1,9 +1,8 @@
 import { spawn, execFile, type ChildProcess } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import path from 'node:path';
-import type { CheckpointInput, PipelineCheckpoint, MediaAvailability, MediaRenderInput, MediaRenderResult } from './media-contract.js';
+import type { AudioPreparationInput, PreparedAudio, SubtitleCue, CheckpointInput, PipelineCheckpoint, PipelineContext, MediaAvailability, MediaRenderInput, MediaRenderResult } from './media-contract.js';
 
 export type MediaRuntimePaths = {
   readonly appRoot: string;
@@ -15,7 +14,7 @@ export type MediaRuntimePaths = {
   readonly browser?: string;
 };
 
-const IMAGE_EXTENSIONS: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+const VISUAL_EXTENSIONS: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/webm': 'webm' };
 const AUDIO_EXTENSIONS: Record<string, string> = { 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/ogg': 'ogg', 'audio/flac': 'flac' };
 const MAX_INPUT_BYTES = 64 * 1024 * 1024;
 const MAX_PREVIEW_BYTES = 128 * 1024 * 1024;
@@ -28,7 +27,7 @@ export function resolveMediaRuntimePaths(input: {
 }): MediaRuntimePaths {
   if (input.packaged) {
     const runtimeRoot = path.join(input.resourcesPath, 'openmontage-media');
-    const mediaBinaries = path.join(runtimeRoot, 'app/remotion-composer/node_modules/@remotion/compositor-win32-x64-msvc');
+    const mediaBinaries = path.join(runtimeRoot, 'ffmpeg/bin');
     return {
       appRoot: path.join(runtimeRoot, 'app'), scratchRoot: input.scratchRoot,
       python: path.join(runtimeRoot, 'python', 'python.exe'),
@@ -38,8 +37,7 @@ export function resolveMediaRuntimePaths(input: {
       browser: path.join(runtimeRoot, 'browser', 'chrome-headless-shell.exe'),
     };
   }
-  const requireFromComposer = createRequire(path.join(input.appRoot, 'remotion-composer/package.json'));
-  const mediaBinaries = (requireFromComposer('@remotion/compositor-win32-x64-msvc') as { dir: string }).dir;
+  const mediaBinaries = path.join(input.appRoot, '.nimi/local/media-build/ffmpeg-9.0.1-essentials_build/bin');
   return {
     appRoot: input.appRoot, scratchRoot: input.scratchRoot,
     python: path.join(input.appRoot, '.venv', 'Scripts', 'python.exe'),
@@ -80,22 +78,31 @@ function validateRenderInput(input: MediaRenderInput): void {
   if (!input || typeof input.renderId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(input.renderId)) {
     throw new Error('A valid media render identifier is required.');
   }
-  if (!Array.isArray(input.scenes) || input.scenes.length < 1 || input.scenes.length > 12) {
-    throw new Error('A render requires between one and twelve scenes.');
+  if (!Array.isArray(input.scenes) || input.scenes.length < 1) {
+    throw new Error('A render requires at least one scene.');
   }
   let totalBytes = 0;
   for (const scene of input.scenes) {
-    if (!scene || !IMAGE_EXTENSIONS[scene.imageMimeType] || !AUDIO_EXTENSIONS[scene.narrationMimeType]
-      || !(scene.image instanceof Uint8Array) || !(scene.narration instanceof Uint8Array)
-      || !scene.image.byteLength || !scene.narration.byteLength) {
-      throw new Error('Each scene needs a supported image and narration file.');
+    if (!scene || !VISUAL_EXTENSIONS[scene.visualMimeType] || !(scene.visual instanceof Uint8Array) || !scene.visual.byteLength
+      || (scene.narration !== undefined && (!(scene.narration instanceof Uint8Array) || !scene.narration.byteLength || !AUDIO_EXTENSIONS[scene.narrationMimeType || '']))) {
+      throw new Error('Each scene needs a supported visual and valid optional narration.');
     }
-    totalBytes += scene.image.byteLength + scene.narration.byteLength;
+    totalBytes += scene.visual.byteLength + (scene.narration?.byteLength || 0);
+  }
+  if (input.music) {
+    if (!AUDIO_EXTENSIONS[input.music.mimeType] || !(input.music.bytes instanceof Uint8Array) || !input.music.bytes.byteLength) throw new Error('Music needs a supported audio format and nonempty bytes.');
+    totalBytes += input.music.bytes.byteLength;
   }
   if (totalBytes > MAX_INPUT_BYTES) throw new Error('The current render input exceeds 64 MiB.');
 }
 
-type ActiveRender = { child: ChildProcess | null; canceled: boolean; stopping?: Promise<void> };
+type ActiveRender = { child: ChildProcess | null; canceled: boolean; stopping?: Promise<void>; completion: Promise<void>; complete: () => void };
+
+function activeOperation(): ActiveRender {
+  let complete!: () => void;
+  const completion = new Promise<void>((resolve) => { complete = resolve; });
+  return { child: null, canceled: false, completion, complete };
+}
 
 export class MediaRenderer {
   private readonly paths: MediaRuntimePaths;
@@ -124,13 +131,19 @@ export class MediaRenderer {
     await render.stopping;
   }
 
-  async dispose(): Promise<void> { await Promise.all([...this.active.keys()].map((id) => this.cancel(id))); }
+  async dispose(): Promise<void> {
+    const operations = [...this.active.entries()];
+    await Promise.all(operations.map(([id]) => this.cancel(id)));
+    // A stopped child still has a pending result and owned-directory cleanup.
+    // Keep the Host alive until that operation has fully released its resources.
+    await Promise.all(operations.map(([, operation]) => operation.completion));
+  }
 
   async checkpoint(input: CheckpointInput): Promise<PipelineCheckpoint> {
     if (this.active.size > 0) throw new Error('Wait for the current media operation before saving a checkpoint.');
     await mkdir(this.paths.scratchRoot, { recursive: true });
     const workspace = await mkdtemp(path.join(this.paths.scratchRoot, 'checkpoint-'));
-    const active: ActiveRender = { child: null, canceled: false };
+    const active = activeOperation();
     this.active.set(workspace, active);
     try {
       const result = await this.runWorker(active, workspace, { ...input, operation: 'checkpoint', project_dir: workspace });
@@ -138,9 +151,27 @@ export class MediaRenderer {
       if (!checkpoint || checkpoint.project_id !== input.projectId || checkpoint.stage !== input.stage || checkpoint.status !== input.status) throw new Error('The checkpoint result does not match the requested transition.');
       return checkpoint;
     } finally {
-      this.active.delete(workspace);
-      if (path.dirname(workspace) !== this.paths.scratchRoot) throw new Error('Unexpected checkpoint cleanup directory.');
-      await rm(workspace, { recursive: true, force: true });
+      try {
+        if (path.dirname(workspace) !== this.paths.scratchRoot) throw new Error('Unexpected checkpoint cleanup directory.');
+        await rm(workspace, { recursive: true, force: true });
+      } finally { this.active.delete(workspace); active.complete(); }
+    }
+  }
+
+  async pipelineContext(input: { pipelineId?: string; stage?: string }): Promise<PipelineContext> {
+    if (this.active.size) throw new Error('Wait for the current media operation before reading pipeline instructions.');
+    await mkdir(this.paths.scratchRoot, { recursive: true });
+    const workspace = await mkdtemp(path.join(this.paths.scratchRoot, 'pipeline-'));
+    const active = activeOperation();
+    this.active.set(workspace, active);
+    try {
+      const response = await this.runWorker(active, workspace, { operation: 'pipeline-context', ...input });
+      const context = response.context as PipelineContext;
+      if (!context || !['catalog', 'stage'].includes(context.type)) throw new Error('The pipeline context is incomplete.');
+      return context;
+    } finally {
+      try { await rm(workspace, { recursive: true, force: true }); }
+      finally { this.active.delete(workspace); active.complete(); }
     }
   }
 
@@ -149,23 +180,29 @@ export class MediaRenderer {
     if (this.active.size > 0) throw new Error('A video is already rendering. Wait for it or cancel it first.');
     const readiness = this.inspect();
     if (!readiness.available) throw new Error('Media runtime is not ready: ' + readiness.missing.join(', '));
-    const active: ActiveRender = { child: null, canceled: false };
+    const active = activeOperation();
     this.active.set(input.renderId, active);
     let workspace: string | undefined;
     try {
       await mkdir(this.paths.scratchRoot, { recursive: true });
       workspace = await mkdtemp(path.join(this.paths.scratchRoot, 'render-'));
-      const scenes: { image: string; audio: string }[] = [];
+        const scenes: Record<string, unknown>[] = [];
       for (const [index, scene] of input.scenes.entries()) {
         if (active.canceled) throw new Error('Video rendering was canceled.');
-        const image = 'scene-' + index + '.' + IMAGE_EXTENSIONS[scene.imageMimeType];
-        const audio = 'scene-' + index + '.' + AUDIO_EXTENSIONS[scene.narrationMimeType];
-        await writeFile(path.join(workspace, image), scene.image);
-        await writeFile(path.join(workspace, audio), scene.narration);
-        scenes.push({ image, audio });
+          const visual = 'scene-' + index + '.' + VISUAL_EXTENSIONS[scene.visualMimeType];
+          const audio = scene.narration ? 'scene-' + index + '.' + AUDIO_EXTENSIONS[scene.narrationMimeType!] : undefined;
+          await writeFile(path.join(workspace, visual), scene.visual);
+          if (audio) await writeFile(path.join(workspace, audio), scene.narration!);
+          scenes.push({ visual, visualMimeType: scene.visualMimeType, audio, durationSeconds: scene.durationSeconds, sourceInSeconds: scene.sourceInSeconds, visualAssetId: scene.visualAssetId, narrationAssetId: scene.narrationAssetId });
       }
       if (active.canceled) throw new Error('Video rendering was canceled.');
-      const response = await this.runWorker(active, workspace, { operation: 'render', project_dir: workspace, scenes });
+        let music: string | undefined;
+        if (input.music) {
+          if (!AUDIO_EXTENSIONS[input.music.mimeType]) throw new Error('Unsupported music format.');
+          music = 'music.' + AUDIO_EXTENSIONS[input.music.mimeType];
+          await writeFile(path.join(workspace, music), input.music.bytes);
+        }
+        const response = await this.runWorker(active, workspace, { operation: 'render', project_dir: workspace, scenes, music, editDecisions: input.editDecisions, subtitles: input.subtitles });
       if (active.canceled) throw new Error('Video rendering was canceled.');
       if (response.output !== 'renders/final.mp4' || response.width !== 1280 || response.height !== 720
         || typeof response.durationSeconds !== 'number' || !Number.isFinite(response.durationSeconds) || response.durationSeconds <= 0) {
@@ -176,13 +213,49 @@ export class MediaRenderer {
       if (!output.isFile() || !output.size || output.size > MAX_PREVIEW_BYTES) throw new Error('The rendered preview exceeds the supported size or is missing.');
       const bytes = new Uint8Array(await readFile(outputPath));
       if (active.canceled) throw new Error('Video rendering was canceled.');
-      return { bytes, width: 1280, height: 720, durationSeconds: response.durationSeconds, mimeType: 'video/mp4' };
+        return { bytes, width: 1280, height: 720, durationSeconds: response.durationSeconds, mimeType: 'video/mp4', hasAudio: response.hasAudio === true };
     } finally {
-      this.active.delete(input.renderId);
-      if (workspace) {
-        if (path.dirname(workspace) !== this.paths.scratchRoot) throw new Error('Unexpected media cleanup directory.');
-        await rm(workspace, { recursive: true, force: true });
-      }
+      try {
+        if (workspace) {
+          if (path.dirname(workspace) !== this.paths.scratchRoot) throw new Error('Unexpected media cleanup directory.');
+          await rm(workspace, { recursive: true, force: true });
+        }
+      } finally { this.active.delete(input.renderId); active.complete(); }
+    }
+  }
+
+  async prepareAudio(input: AudioPreparationInput): Promise<PreparedAudio> {
+    const extension = ({ ...VISUAL_EXTENSIONS, ...AUDIO_EXTENSIONS })[input.mimeType];
+    if (!extension || !/^(video|audio)\//.test(input.mimeType) || !(input.bytes instanceof Uint8Array) || !input.bytes.byteLength || input.bytes.byteLength > MAX_PREVIEW_BYTES) throw new Error('Audio preparation requires a supported source up to 128 MiB.');
+    if (!/^[a-zA-Z0-9-]{8,80}$/.test(input.operationId) || this.active.size) throw new Error('Wait for the current media operation before preparing audio.');
+    await mkdir(this.paths.scratchRoot, { recursive: true });
+    const workspace = await mkdtemp(path.join(this.paths.scratchRoot, 'audio-'));
+    const active = activeOperation(); this.active.set(input.operationId, active);
+    try {
+      const source = 'source.' + extension;
+      await writeFile(path.join(workspace, source), input.bytes);
+      const result = await this.runWorker(active, workspace, { operation: 'prepare-audio', project_dir: workspace, source, startSeconds: input.startSeconds, endSeconds: input.endSeconds });
+      if (active.canceled) throw new Error('Audio preparation was canceled.');
+      const bytes = new Uint8Array(await readFile(path.join(workspace, 'transcription.wav')));
+      if (!bytes.byteLength || bytes.byteLength > 32 * 1024 * 1024) throw new Error('Prepared audio exceeds the current Nimi transcription input limit. Select a shorter source range.');
+      return { bytes, mimeType: 'audio/wav', durationSeconds: Number(result.durationSeconds), sourceOffsetSeconds: Number(result.sourceOffsetSeconds) };
+    } finally {
+      try { await rm(workspace, { recursive: true, force: true }); }
+      finally { this.active.delete(input.operationId); active.complete(); }
+    }
+  }
+
+  async exportSubtitles(input: { cues: readonly SubtitleCue[] }): Promise<{ srt: string; vtt: string }> {
+    if (this.active.size) throw new Error('Wait for the current media operation before exporting subtitles.');
+    await mkdir(this.paths.scratchRoot, { recursive: true });
+    const workspace = await mkdtemp(path.join(this.paths.scratchRoot, 'subtitles-'));
+    const active = activeOperation(); this.active.set(workspace, active);
+    try {
+      await this.runWorker(active, workspace, { operation: 'export-subtitles', project_dir: workspace, cues: input.cues });
+      return { srt: await readFile(path.join(workspace, 'subtitles.srt'), 'utf8'), vtt: await readFile(path.join(workspace, 'subtitles.vtt'), 'utf8') };
+    } finally {
+      try { await rm(workspace, { recursive: true, force: true }); }
+      finally { this.active.delete(workspace); active.complete(); }
     }
   }
 

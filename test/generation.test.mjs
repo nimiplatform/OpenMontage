@@ -25,3 +25,17 @@ test('an uncertain persisted submission cannot automatically be submitted again'
   }), /结果不确定/);
   assert.equal(called, false);
 });
+
+test('video prompts use the typed content carrier and explicit input rejection permits correction', async () => {
+  const changes = [];
+  const rejection = Object.assign(new Error('ai-media-spec-invalid'), { reasonCode: 'ai-media-spec-invalid' });
+  await assert.rejects(generateSceneMedia({
+    client: { aiConfig: { get: async () => ({ revision: 'approved', effectiveSelections: [{ capabilityContract: 'video.generate', state: 'ready' }] }) }, ai: { scenarioJobs: { submit: async (spec) => {
+      assert.deepEqual(spec.content, [{ type: 'text', role: 'prompt', text: 'Natural moving water' }]);
+      throw rejection;
+    } } } },
+    scene: { title: 'scene', narration: '', imagePrompt: 'Natural moving water', durationSeconds: 5 }, kind: 'video', voiceId: '', projectId: 'project', existing: {}, approvedRevision: 'approved',
+    stopped: () => false, onChange: async (change) => { changes.push(change); }, onJob: () => {}, onStatus: () => {},
+  }), rejection);
+  assert.deepEqual(changes, [{ pendingSubmission: 'video' }, { pendingSubmission: undefined }]);
+});

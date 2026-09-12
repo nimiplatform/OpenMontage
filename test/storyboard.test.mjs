@@ -5,8 +5,16 @@ import { parseStoryboard, storyboardMessages } from '../src/production/storyboar
 const scene = { title: '场景', narration: '已提供的事实', imagePrompt: '对应事实的画面' };
 test('storyboard parsing rejects incomplete and unusable model output before generation', () => {
   assert.throws(() => parseStoryboard('{"title":'), /完整/);
-  assert.throws(() => parseStoryboard(JSON.stringify({ title: '短片', scenes: [scene] })), /三个场景/);
+  assert.throws(() => parseStoryboard(JSON.stringify({ title: '短片', scenes: [] })), /1–12/);
+  assert.throws(() => parseStoryboard(JSON.stringify({ title: '短片', scenes: Array(13).fill(scene) })), /1–12/);
   assert.throws(() => parseStoryboard(JSON.stringify({ title: '短片', scenes: [scene, scene, { ...scene, narration: '' }] })), /旁白/);
+});
+test('the scene count follows the plan within the real media worker limit', () => {
+  for (const count of [1, 4, 12]) {
+    assert.equal(parseStoryboard(JSON.stringify({ title: '短片', scenes: Array(count).fill(scene) })).scenes.length, count);
+  }
+  assert.match(storyboardMessages('已知事实', 60, 4)[1].text, /用户指定 4 个场景/);
+  assert.throws(() => storyboardMessages('已知事实', 60, 13), /1–12/);
 });
 test('a complete fenced storyboard is normalized without inventing missing scenes', () => {
   const result = parseStoryboard('```json\n' + JSON.stringify({ title: ' 短片 ', scenes: [scene, scene, scene] }) + '\n```');

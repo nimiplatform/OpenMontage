@@ -24,7 +24,7 @@ export function AIConfigPanel({ open, onClose, onCommitted }: { open: boolean; o
   }, [refresh, onCommitted]);
   return <OverlayShell open={open} onClose={onClose} kind="dialog" size="lg" title="AI 设置">
     <ModelConfigAIConfigSurface context={{ owner: 'app-ai-config', appId }}
-      capabilityContracts={['text.generate', 'image.generate', 'audio.synthesize']}
+      capabilityContracts={['text.generate', 'image.generate', 'audio.synthesize', 'audio.transcribe', 'video.generate', 'music.generate']}
       capabilities={snapshot ? snapshot.config?.capabilities ?? null : undefined}
       revision={snapshot?.revision} effectiveSelections={snapshot?.effectiveSelections}
       listOptions={(query) => getNimiLocalAppClient().aiConfig.listOptions(query)}

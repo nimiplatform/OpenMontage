@@ -15,33 +15,11 @@ export const Vignette: React.FC = () => (
 // Enhanced Image Scene — spring physics, parallax, variety
 // ---------------------------------------------------------------------------
 
-export const ImageScene: React.FC<{ src: string; animation?: string }> = ({
-  src,
-  animation,
-}) => {
-  const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-
-  // Smooth spring fade-in
-  const fadeIn = spring({ frame, fps, config: { damping: 18, stiffness: 80 } });
-
-  // Fade-out for crossfade effect
-  const fadeOutStart = durationInFrames - 8;
-  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
+export function imageMotion(animation: string | undefined, progress: number) {
   let scale = 1;
   let translateX = 0;
   let translateY = 0;
   const anim = animation || "zoom-in";
-
-  // Progress with easing — smoother than linear
-  const progress = interpolate(frame, [0, durationInFrames], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
 
   if (anim === "zoom-in") {
     scale = 1 + progress * 0.18;
@@ -64,9 +42,38 @@ export const ImageScene: React.FC<{ src: string; animation?: string }> = ({
     scale = 1.1;
   }
   // "static" or "none" → just display
+  return { scale, translateX, translateY };
+}
+
+export const ImageScene: React.FC<{ src: string; animation?: string; scale?: number; backgroundColor?: string }> = ({
+  src,
+  animation,
+  scale: baseScale = 1,
+  backgroundColor = "#0F172A",
+}) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  // Smooth spring fade-in
+  const fadeIn = spring({ frame, fps, config: { damping: 18, stiffness: 80 } });
+
+  // Fade-out for crossfade effect
+  const fadeOutStart = durationInFrames - 8;
+  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  // Progress with easing — smoother than linear
+  const progress = interpolate(frame, [0, durationInFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const { scale, translateX, translateY } = imageMotion(animation, progress);
 
   return (
-    <AbsoluteFill style={{ overflow: "hidden", background: "#0F172A" }}>
+    <AbsoluteFill style={{ overflow: "hidden", background: backgroundColor }}>
       <Img
         src={resolveAsset(src)}
         style={{
@@ -74,7 +81,7 @@ export const ImageScene: React.FC<{ src: string; animation?: string }> = ({
           height: "100%",
           objectFit: "cover",
           opacity: fadeIn * fadeOut,
-          transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+          transform: `scale(${scale * baseScale}) translate(${translateX}px, ${translateY}px)`,
           willChange: "transform, opacity",
         }}
       />

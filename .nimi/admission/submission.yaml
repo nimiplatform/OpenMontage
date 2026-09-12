@@ -11,6 +11,9 @@ capability_contract_refs:
   - text.generate
   - image.generate
   - audio.synthesize
+  - audio.transcribe
+  - video.generate
+  - music.generate
 required_standardized_feature_refs: []
 storage_policy:
   kind: nimi-mediated-default

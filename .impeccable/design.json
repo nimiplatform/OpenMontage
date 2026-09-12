@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T21:43:21Z",
+  "title": "Design System: OpenMontage / Backlot",
+  "extensions": {
+    "shadows": [
+      { "name": "script-shadow", "value": "0 18px 50px -18px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.06) inset", "purpose": "The cream screenplay's diffuse paper depth." },
+      { "name": "awaiting-stage", "value": "0 0 18px rgba(240,168,60,.25)", "purpose": "Stage node awaiting confirmation." }
+    ],
+    "motion": [
+      { "name": "control-transition", "value": "background-color .16s, border-color .16s", "purpose": "Primary and secondary control states; disabled under reduced motion." },
+      { "name": "library-hover", "value": "border-color .15s, transform .15s", "purpose": "Project card hover border and 2px lift; disabled under reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow-aside", "value": "1000px" },
+      { "name": "stack-board", "value": "900px" },
+      { "name": "stack-forms", "value": "760px" },
+      { "name": "stack-aside", "value": "520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Amber confirmation and consequential action.",
+      "html": "<button class=\"ds-primary\">确认方案并生成素材</button>",
+      "css": ".ds-primary{font:650 13px/1.4 Inter,'Microsoft YaHei',sans-serif;min-height:36px;padding:8px 13px;border:1px solid transparent;border-radius:6px;background:var(--amber,#f0a83c);color:#22180a;cursor:pointer;transition:background-color .16s,border-color .16s}.ds-primary:hover:not(:disabled){background:#ffc168}.ds-primary:focus-visible{outline:2px solid var(--amber,#f0a83c);outline-offset:4px}.ds-primary:disabled{opacity:.45;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet bordered navigation and editing action.",
+      "html": "<button class=\"ds-secondary\">项目库</button>",
+      "css": ".ds-secondary{font:13px/1.4 Inter,'Microsoft YaHei',sans-serif;min-height:36px;padding:8px 13px;border:1px solid var(--border,#232329);border-radius:6px;background:var(--surface-2,#16161a);color:var(--text,#ececef);cursor:pointer;transition:background-color .16s,border-color .16s}.ds-secondary:hover:not(:disabled){background:var(--surface-3,#1c1c21);border-color:var(--text-3,#9999a4)}.ds-secondary:focus-visible{outline:2px solid var(--amber,#f0a83c);outline-offset:4px}.ds-secondary:disabled{opacity:.45;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Material field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled, resizable field for factual material and creative intent.",
+      "html": "<label class=\"ds-label\" for=\"ds-material\">事实材料与创作意图</label><textarea class=\"ds-field\" id=\"ds-material\" rows=\"3\" placeholder=\"提供要讲的事实，以及画面需要注意的内容。\"></textarea>",
+      "css": ".ds-label{display:block;color:var(--text-2,#a0a0a9);font:13px Inter,'Microsoft YaHei',sans-serif;margin:20px 0 8px}.ds-field{display:block;width:100%;font:14px/1.7 Inter,'Microsoft YaHei',sans-serif;padding:10px 12px;border:1px solid #3b3b43;border-radius:6px;background:var(--surface-2,#16161a);color:var(--text,#ececef);resize:vertical;caret-color:var(--amber,#f0a83c)}.ds-field::placeholder{color:var(--text-3,#9999a4)}.ds-field:focus-visible{outline:2px solid var(--amber,#f0a83c);outline-offset:4px}"
+    },
+    {
+      "name": "Project navigation",
+      "kind": "nav",
+      "description": "Local views use a raised dark fill for the current page.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"项目区域\"><button aria-current=\"page\">制作总览</button><button>剧本</button><button>分镜与素材</button><button>成片</button></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:4px}.ds-nav button{font:13px Inter,'Microsoft YaHei',sans-serif;padding:9px 13px;border:0;border-radius:5px;background:transparent;color:var(--text-2,#a0a0a9);cursor:pointer}.ds-nav button[aria-current=page]{background:var(--surface-3,#1c1c21);color:var(--text,#ececef)}.ds-nav button:focus-visible{outline:2px solid var(--amber,#f0a83c);outline-offset:4px}"
+    },
+    {
+      "name": "Project metadata chip",
+      "kind": "chip",
+      "description": "Compact, noninteractive metadata in the project slate.",
+      "html": "<span class=\"ds-chip\">图像解说 · 4 场景</span>",
+      "css": ".ds-chip{font:calc(10.5px * 1.16) 'JetBrains Mono','Microsoft YaHei',monospace;letter-spacing:.06em;padding:3px 9px;border-radius:99px;border:1px solid var(--border,#232329);color:var(--text-2,#a0a0a9);white-space:nowrap}"
+    },
+    {
+      "name": "Decisions panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Quiet context panel with a separated heading and readable detail.",
+      "html": "<section class=\"ds-panel\"><header class=\"ds-panel-head\"><h2>制作决策</h2></header><div class=\"ds-panel-body\"><p>实际费用暂不可得</p><p class=\"ds-muted\">没有可用报价或账单数据，不估造金额。</p></div></section>",
+      "css": ".ds-panel{background:var(--surface,#101013);color:var(--text,#ececef);border:1px solid var(--border-soft,#1a1a1f);border-radius:12px}.ds-panel-head{padding:13px 16px 11px;border-bottom:1px solid var(--border-soft,#1a1a1f)}.ds-panel-head h2{margin:0;font:600 13px 'JetBrains Mono','Microsoft YaHei',monospace;letter-spacing:.07em;color:var(--text-2,#a0a0a9)}.ds-panel-body{padding:14px 16px;font:14px/1.65 Inter,'Microsoft YaHei',sans-serif}.ds-panel-body p{margin:3px 0}.ds-muted{color:var(--text-2,#a0a0a9);font-size:13px}"
+    },
+    {
+      "name": "Screenplay page",
+      "kind": "custom",
+      "description": "Warm paper carries scene headings and narration with a fine page edge.",
+      "html": "<article class=\"ds-script\"><h2>剧本</h2><h3>01 — 场景标题</h3><p>旁白与事实材料在这里成为可以阅读、确认和修订的剧本。</p></article>",
+      "css": ".ds-script{position:relative;max-width:700px;padding:50px 44px 30px;border-radius:6px;background:linear-gradient(178deg,var(--cream,#f2e9d5) 0%,var(--cream-shade,#e5d9be) 130%);color:var(--cream-ink,#29231a);font-family:'Courier Prime','Microsoft YaHei','Courier New',monospace;box-shadow:var(--script-shadow,0 18px 50px -18px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.06) inset)}.ds-script::after{content:'';position:absolute;right:7px;top:7px;bottom:7px;width:1px;background:rgba(0,0,0,.07)}.ds-script h2{text-align:center;font-size:20px;font-weight:700;letter-spacing:.04em;margin:0 0 4px}.ds-script h3{font-size:14px;font-weight:700;margin:28px 0 6px}.ds-script p{font-size:15px;line-height:1.9;margin:0}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Backlot — Living Storyboard",
+    "overview": "Preserve the original Backlot production desk: a near-black editorial canvas, a warm screenplay page, precise production labels and a horizontal strip of real scene media. The work carries the visual emphasis; controls help creators read, review, confirm and revise it.\n\nThis records the current Nimi App implementation in `src/production/backlot-workspace.tsx` and its stylesheet, composed from `backlot/ui/board.css`. Nimi Kit owns platform integration and AIConfig; Backlot owns the production canvas. This is visual guidance, not a release or complete acceptance claim.",
+    "keyCharacteristics": [
+      "Dark tonal surfaces surrounding a cream screenplay.",
+      "Monospaced production metadata beside readable body copy.",
+      "Amber confirmation and active states; green completed states.",
+      "Visible project history, scene media and revision controls."
+    ],
+    "rules": [
+      { "name": "The Status Rule", "body": "Keep amber tied to action or attention and green tied to completion; preserve the explicit state label.", "section": "colors" }
+    ],
+    "dos": [
+      "Do preserve the near-black desk, cream screenplay, filmstrip and restrained production labels.",
+      "Do pair status color with explicit text or icons and retain visible keyboard focus.",
+      "Do keep real media, saved decisions and revision state legible at narrow widths."
+    ],
+    "donts": [
+      "Don't replace Backlot with a generic platform settings form.",
+      "Don't invent cost figures, progress, successful actions or media to fill the interface.",
+      "Don't promote unused styles from the original board into App features or acceptance claims."
+    ]
+  }
+}

@@ -23,3 +23,12 @@ body {
   background: var(--nimi-surface-canvas);
   color: var(--nimi-text-primary);
 }
+
+/* Backlot is a document-style production board, not a size-contained Lab pane. */
+#root.nimi-workbench-host {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+  container-type: normal;
+}
+#root .app-shell { display: block; height: auto; min-height: 100vh; overflow: visible; background: #0a0a0c; }
