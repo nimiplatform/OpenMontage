@@ -202,6 +202,8 @@ async function* streamLocalAppTextEvents(
     let started = false;
     let textItemOpened = false;
     for await (const event of subscription) {
+      // This one-turn text surface has no follow-up turn to carry opaque state into.
+      if (event.type === 'reasoning-continuity') continue;
       if (!started) {
         started = true;
         yield {
@@ -223,6 +225,11 @@ async function* streamLocalAppTextEvents(
         throw Object.assign(new Error(event.actionHint || 'Runtime Scenario stream failed.'), {
           reasonCode: event.reasonCode,
           actionHint: event.actionHint,
+        });
+      }
+      if (event.type === 'tool-call' || event.finishReason === 'tool-calls') {
+        throw Object.assign(new Error('The text-only Studio request received undeclared tool output.'), {
+          reasonCode: 'SDK_AI_RUNTIME_OUTPUT_INVALID',
         });
       }
       if (textItemOpened) {

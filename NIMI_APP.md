@@ -23,7 +23,7 @@ The pipeline catalogue lists the original 12 business workflows and their actual
 
 The verified hybrid sample combines a provided video excerpt, a newly generated video and image, and three narration segments into a 15-second result. This does not cover every hybrid tool or video mode. Music jobs require lyrics in the current public Nimi contract and an available configured music service; real music generation and image-reference video generation remain unverified. Source text transcription now uses Nimi speech recognition, with editable results, TXT export and preservation of the last successful text when a new request fails. Paragraph/manual subtitles support real narration timing, SRT/VTT export and local burn/remove. Automatic word alignment and multilingual dubbing remain unfinished. Retrieval, layered composition, additional transitions, avatars and the other specialized workflows also still require integration. These are core remaining work before final delivery. Keeping original source files or showing the catalogue does not count as an integrated product path.
 
-The live Dashscope video path required Nimi Runtime fix `b36e72781`: native video parameter mapping and the `wan2.7-t2v` catalog entry. The development Runtime contains that fix; formal installed Runtime compatibility still needs release acceptance.
+The earlier live Dashscope sample used a Runtime with the native video parameter mapping and `wan2.7-t2v` catalog entry. Use a Runtime compatible with the selected SDK/Kit/native combination and the task's configured capabilities; dependency and build checks do not replace live provider or installed Runtime acceptance.
 
 The Windows package includes Python, Node, Remotion, Chrome Headless Shell and FFmpeg/FFprobe. The media tools use a pinned full-filter FFmpeg distribution for the original mixing operations; Remotion keeps its own compositor binaries. Ordinary-machine Catalog installation and update acceptance are still pending. This is a development candidate, not a completed public release.
 
@@ -42,12 +42,12 @@ as a mandatory onboarding step for every coding task. The current hybrid
 slice can validate tooling changes; the remaining product workflows above
 retain their separate completion requirements.
 
-Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.1, SDK 0.11.0 and Kit 0.7.0. No Nimi workspace overrides or modified installed packages are used. The App's single-package workspace isolates it from enclosing workspaces.
+Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.2, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. No Nimi workspace overrides or modified installed packages are used. The App's single-package workspace isolates it from enclosing workspaces.
 
-Keep nimi-coding pinned to 0.6.2 while app-tools 0.5.1 requires that exact version. The newer nimi-coding 0.6.3 stops managing `CLAUDE.md`; adopt that change once app-tools supports it.
+App Tools maintains the project lifecycle skill and its independent AGENTS block. Nimi-coding 0.6.3 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
 
 ```powershell
-corepack pnpm@10.34.5 install
+corepack pnpm@10.34.5 install --frozen-lockfile
 py -3 -m venv .venv
 .venv/Scripts/python -m pip install -r app_runtime/requirements-media.txt
 npm --prefix remotion-composer ci
@@ -60,7 +60,7 @@ corepack pnpm@10.34.5 run dev -- --cdp-port 9236
 
 The official scaffold was integrated using app-tools' existing-App adoption workflow. There is no managed scaffold lock. `sync` maintains package-owned projections; `check`, `dev`, `app:build` and `pack` use the official lifecycle owners. The App-owned build adds the selected media runtime. Native media and checkpoint tests run against that completed package during the build; `test:app` runs the application control tests without requiring media setup.
 
-To reopen an existing development project, list registrations with `pnpm exec nimi-app dev --list-registrations`, then use `pnpm run dev -- --resume <selector> --cdp-port 9236`. A new development registration has its own project data. CDP acceptance attaches to the exact Desktop-supervised OpenMontage window.
+To reopen an existing development project, list registrations with `pnpm exec nimi-app dev --list-registrations`, then use `pnpm run dev -- --resume <selector> --cdp-port 9236`. Selectors belong to the current Desktop session; list again after restarting Nimi. A new development registration has its own project data. CDP acceptance attaches to the exact Desktop-supervised OpenMontage window. Development media setup currently uses Windows executables; the macOS package branch in the generic Electron script does not establish macOS media support.
 
 ## Release and licensing
 

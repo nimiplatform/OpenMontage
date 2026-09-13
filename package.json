@@ -39,8 +39,8 @@
     "lucide-react": "^0.577.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "@nimiplatform/sdk": "^0.11.0",
-    "@nimiplatform/kit": "^0.7.0"
+    "@nimiplatform/sdk": "^0.12.0",
+    "@nimiplatform/kit": "^0.8.0"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
@@ -56,8 +56,8 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
     "yaml": "^2.9.0",
-    "@nimiplatform/app-tools": "^0.5.1",
-    "@nimiplatform/nimi-coding": "0.6.2"
+    "@nimiplatform/app-tools": "^0.5.2",
+    "@nimiplatform/nimi-coding": "0.6.3"
   },
   "author": "OpenMontage contributors"
 }
