@@ -29,6 +29,19 @@ The Windows package includes Python, Node, Remotion, Chrome Headless Shell and F
 
 ## Development
 
+This fork tracks [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage)
+from upstream baseline `08e2151fa02de28a5d6a312b3d575692bf147ad7`. The downstream
+App mainline is `nimi`; Nimi App versions are independent of upstream tags.
+For an upstream update, select an exact commit and review code, dependency,
+license, CI and instruction-entry changes together. Do not import upstream
+release tags automatically or reintroduce the original provider path.
+
+Development tasks follow AGENTS.md and the actual package commands. The broad
+upstream production guide is scoped to production knowledge and does not run
+as a mandatory onboarding step for every coding task. The current hybrid
+slice can validate tooling changes; the remaining product workflows above
+retain their separate completion requirements.
+
 Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.1, SDK 0.11.0 and Kit 0.7.0. No Nimi workspace overrides or modified installed packages are used. The App's single-package workspace isolates it from enclosing workspaces.
 
 Keep nimi-coding pinned to 0.6.2 while app-tools 0.5.1 requires that exact version. The newer nimi-coding 0.6.3 stops managing `CLAUDE.md`; adopt that change once app-tools supports it.

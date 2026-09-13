@@ -1,12 +1,8 @@
-# OpenMontage
+# OpenMontage for Nimi
 
-**MANDATORY: Read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before responding to ANY user message.**
+For App development, integration, maintenance or release, read [AGENTS.md](AGENTS.md) and [NIMI_APP.md](NIMI_APP.md).
 
-Do not act on the user's request until you have read AGENT_GUIDE.md.
-It contains routing rules that determine your first action based on what the user asked.
-Skipping it WILL cause you to take the wrong action.
-
-There are no instructions in this file. All instructions are in AGENT_GUIDE.md.
+For video-production tasks, use the current Nimi App scope in NIMI_APP.md and the relevant business guidance in [AGENT_GUIDE.md](AGENT_GUIDE.md). Upstream provider setup and direct AI calls do not replace the Nimi integration boundary.
 
 <!-- nimicoding:managed:claude:start -->
 # Nimi Coding Managed Block

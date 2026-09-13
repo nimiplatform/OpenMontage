@@ -1,12 +1,13 @@
 # OpenMontage
 
-**MANDATORY: Read `AGENT_GUIDE.md` before responding to ANY user message.**
+For App development, integration, maintenance or release work, start with
+`NIMI_APP.md`, the package manifest and the affected product entry. The Nimi
+integration section below defines the platform boundary.
 
-Do not act on the user's request until you have read AGENT_GUIDE.md.
-It contains routing rules that determine your first action based on what the user asked.
-Skipping it WILL cause you to take the wrong action.
-
-Video-production instructions are in AGENT_GUIDE.md.
+For video-production tasks, use `NIMI_APP.md` for the currently integrated
+workflows and `AGENT_GUIDE.md` for relevant editorial and production guidance.
+The upstream command-line provider setup is reference material; it does not
+replace this fork's Nimi AI and account paths.
 
 ## Nimi App integration
 

@@ -1,6 +1,15 @@
 # OpenMontage - Agent Guide
 
-Start here. This is the complete operating guide and agent contract for OpenMontage.
+This is the upstream video-production guide. In this Nimi fork, begin with
+`AGENTS.md` and `NIMI_APP.md` to distinguish App development from producing a
+video and to determine which workflows are actually integrated.
+
+Apply the relevant editorial, checkpoint and production knowledge below to the
+supported Nimi App journey. Upstream vendor setup, environment-key instructions
+and direct provider tool execution describe the original command-line system;
+they are not an alternate AI execution path for this Nimi App. Nimi AI,
+configuration and platform identity use the standard SDK/Kit carrier. Retaining
+an upstream skill or tool does not establish an integrated product capability.
 
 For architecture, key files, and conventions see [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
 
