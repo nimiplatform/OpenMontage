@@ -117,7 +117,7 @@ try {
     // Publisher-side ad-hoc sealing supplies no Developer ID or notarization.
     // Runtime preserves these bytes; Nimi never signs installed third-party code.
     ...(MACOS_BUILD ? { osxSign: {
-      identity: '-', identityValidation: false, preAutoEntitlements: false,
+      identity: '-', identityValidation: false, continueOnError: false, preAutoEntitlements: false,
       preEmbedProvisioningProfile: false, strictVerify: true,
       optionsForFile: () => ({ entitlements: [], hardenedRuntime: false, timestamp: 'none' }),
     } } : {}),
@@ -154,7 +154,7 @@ try {
   if (MACOS_BUILD) {
     // Media execution must leave the sealed install payload unchanged.
     await new Promise((resolve, reject) => {
-      const child = spawn('/usr/bin/codesign', ['--verify', '--deep', '--strict', path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.app`)], { stdio: 'inherit' });
+      const child = spawn('/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=2', path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.app`)], { stdio: 'inherit' });
       child.once('error', reject);
       child.once('close', (code) => code === 0 ? resolve() : reject(new Error(`Media execution invalidated the macOS package signature (${code}).`)));
     });
