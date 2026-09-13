@@ -1,3 +1,4 @@
+import { packagedResources } from './packaged-paths.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
@@ -8,7 +9,7 @@ import { MediaRenderer, resolveMediaRuntimePaths } from '../../src-electron/medi
 
 test('packaged source-audio preparation trims and converts real media, then releases scratch files', async () => {
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'openmontage-source-audio-'));
-  const paths = resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: path.join(scratch, 'work'), packaged: true, resourcesPath: path.join(process.cwd(), 'dist-electron-package/openmontage-nimi-app-shell-win32-x64/resources') });
+  const paths = resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: path.join(scratch, 'work'), packaged: true, resourcesPath: packagedResources(process.cwd()) });
   const renderer = new MediaRenderer(paths);
   try {
     const source = path.join(scratch, 'source.wav');
@@ -30,7 +31,7 @@ test('packaged source-audio preparation trims and converts real media, then rele
 
 test('the original subtitle tool keeps actual segment gaps and Chinese text in SRT and VTT', async () => {
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'openmontage-subtitle-test-'));
-  const renderer = new MediaRenderer(resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: scratch, packaged: true, resourcesPath: path.join(process.cwd(), 'dist-electron-package/openmontage-nimi-app-shell-win32-x64/resources') }));
+  const renderer = new MediaRenderer(resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: scratch, packaged: true, resourcesPath: packagedResources(process.cwd()) }));
   try {
     const result = await renderer.exportSubtitles({ cues: [{ start: 0, end: 1.28, text: '水在流动。' }, { start: 5, end: 6.52, text: '第二段旁白。' }] });
     assert.match(result.srt, /00:00:00,000 --> 00:00:01,280/);

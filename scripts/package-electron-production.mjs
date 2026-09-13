@@ -121,6 +121,9 @@ try {
       preEmbedProvisioningProfile: false, strictVerify: true,
       optionsForFile: () => ({ entitlements: [], hardenedRuntime: false, timestamp: 'none' }),
     } } : {}),
+    afterCopy: [async ({ buildPath }) => {
+      await prepareMediaRuntime(appRoot, path.dirname(buildPath));
+    }],
     afterInitialize: [async ({ buildPath }) => {
       const packagedManifestPath = path.join(buildPath, 'package.json');
       const packagedManifest = JSON.parse(await readFile(packagedManifestPath, 'utf8'));
@@ -143,12 +146,19 @@ try {
   await realpath(MACOS_BUILD
     ? path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.app`, 'Contents', 'MacOS', APP_EXECUTABLE_NAME)
     : path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.exe`));
-  await prepareMediaRuntime(appRoot, path.join(expectedPackageRoot, 'resources'));
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['--test', 'test/media/checkpoint.test.mjs', 'test/media/media-runtime.test.mjs', 'test/media/subtitles.test.mjs'], { cwd: appRoot, stdio: 'inherit', windowsHide: true });
     child.once('error', reject);
     child.once('close', (code) => code === 0 ? resolve() : reject(new Error(`Packaged media tests failed (${code}).`)));
   });
+  if (MACOS_BUILD) {
+    // Media execution must leave the sealed install payload unchanged.
+    await new Promise((resolve, reject) => {
+      const child = spawn('/usr/bin/codesign', ['--verify', '--deep', '--strict', path.join(expectedPackageRoot, `${APP_EXECUTABLE_NAME}.app`)], { stdio: 'inherit' });
+      child.once('error', reject);
+      child.once('close', (code) => code === 0 ? resolve() : reject(new Error(`Media execution invalidated the macOS package signature (${code}).`)));
+    });
+  }
   packageCompleted = true;
   process.stdout.write(`[nimi-app] Electron production package: ${expectedPackageRoot}\n`);
 } finally {

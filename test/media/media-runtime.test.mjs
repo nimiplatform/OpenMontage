@@ -1,3 +1,4 @@
+import { packagedResources } from './packaged-paths.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { access, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
@@ -8,7 +9,7 @@ import test from 'node:test';
 import { MediaRenderer, mediaWorkerEnvironment, resolveMediaRuntimePaths } from '../../src-electron/media-runtime.ts';
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const resourcesPath = path.join(appRoot, 'dist-electron-package/openmontage-nimi-app-shell-win32-x64/resources');
+const resourcesPath = packagedResources(appRoot);
 
 test('the local media runtime renders actual image/audio inputs to a 720p MP4', { timeout: 240000 }, async () => {
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'openmontage-media-test-'));
@@ -28,7 +29,7 @@ test('the local media runtime renders actual image/audio inputs to a 720p MP4', 
       '    audio.setparams((1, 2, 24000, 0, "NONE", "not compressed"))',
       '    audio.writeframes(b"".join(struct.pack("<h", round(4000 * math.sin(2 * math.pi * 440 * frame / 24000))) for frame in range(12000)))',
     ].join('\n');
-    const fixture = spawnSync(paths.python, ['-c', fixtureScript, scratch], { encoding: 'utf8', windowsHide: true });
+    const fixture = spawnSync(paths.python, ['-B', '-c', fixtureScript, scratch], { encoding: 'utf8', windowsHide: true });
     assert.equal(fixture.status, 0, fixture.stderr);
     const image = new Uint8Array(await readFile(path.join(scratch, 'image.png')));
     const narration = new Uint8Array(await readFile(path.join(scratch, 'audio.wav')));
@@ -49,7 +50,7 @@ test('the local media runtime renders actual image/audio inputs to a 720p MP4', 
     const visible = whiteRows(0.1);
     assert.ok(visible.length > 45 && Math.max(...visible) < 180, 'the requested large caption must appear at the top without requiring an original-workflow EDL');
     assert.equal(whiteRows(0.4).length, 0, 'the caption must disappear after its cue ends');
-    const silence = spawnSync(paths.python, ['-c', 'import sys,wave\nwith wave.open(sys.argv[1], "wb") as audio:\n audio.setparams((1,2,24000,0,"NONE","not compressed"))\n audio.writeframes(bytes(24000))', path.join(scratch, 'silent.wav')], { encoding: 'utf8', windowsHide: true });
+    const silence = spawnSync(paths.python, ['-B', '-c', 'import sys,wave\nwith wave.open(sys.argv[1], "wb") as audio:\n audio.setparams((1,2,24000,0,"NONE","not compressed"))\n audio.writeframes(bytes(24000))', path.join(scratch, 'silent.wav')], { encoding: 'utf8', windowsHide: true });
     assert.equal(silence.status, 0, silence.stderr);
     await assert.rejects(renderer.render({ renderId: 'silent-narration-test', scenes: [{ visual: image, visualMimeType: 'image/png', narration: new Uint8Array(await readFile(path.join(scratch, 'silent.wav'))), narrationMimeType: 'audio/wav' }] }), /effectively silent/);
     const canceled = assert.rejects(renderer.render({ renderId: 'dispose-active-render', scenes: [{ visual: image, visualMimeType: 'image/png', narration, narrationMimeType: 'audio/wav' }] }), /canceled/);
@@ -81,7 +82,7 @@ test('canonical edit trims and reorders real video with a still insert', { timeo
     // A two-color source makes the requested source trim observable in output pixels.
     const fixture = spawnSync(paths.ffmpeg, ['-v', 'error', '-f', 'lavfi', '-i', 'color=c=red:s=320x180:d=1:r=30', '-f', 'lavfi', '-i', 'color=c=blue:s=320x180:d=1:r=30', '-filter_complex', '[0:v][1:v]concat=n=2:v=1:a=0[v]', '-map', '[v]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(scratch, 'source.mp4')], { encoding: 'utf8', windowsHide: true });
     assert.equal(fixture.status, 0, fixture.stderr);
-    const still = spawnSync(paths.python, ['-c', 'from PIL import Image; import sys; Image.new("RGB",(320,180),(0,255,0)).save(sys.argv[1])', path.join(scratch, 'still.png')], { encoding: 'utf8', windowsHide: true });
+    const still = spawnSync(paths.python, ['-B', '-c', 'from PIL import Image; import sys; Image.new("RGB",(320,180),(0,255,0)).save(sys.argv[1])', path.join(scratch, 'still.png')], { encoding: 'utf8', windowsHide: true });
     assert.equal(still.status, 0, still.stderr);
     const result = await renderer.render({ renderId: 'video-source-trim', scenes: [
       { visual: new Uint8Array(await readFile(path.join(scratch, 'still.png'))), visualMimeType: 'image/png', visualAssetId: 'still', durationSeconds: 0.5 },

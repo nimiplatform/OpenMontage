@@ -25,7 +25,7 @@ The verified hybrid sample combines a provided video excerpt, a newly generated 
 
 The earlier live Dashscope sample used a Runtime with the native video parameter mapping and `wan2.7-t2v` catalog entry. Use a Runtime compatible with the selected SDK/Kit/native combination and the task's configured capabilities; dependency and build checks do not replace live provider or installed Runtime acceptance.
 
-The Windows package includes Python, Node, Remotion, Chrome Headless Shell and FFmpeg/FFprobe. The media tools use a pinned full-filter FFmpeg distribution for the original mixing operations; Remotion keeps its own compositor binaries. Ordinary-machine Catalog installation and update acceptance are still pending. This is a development candidate, not a completed public release.
+The Windows x86_64 and macOS Apple Silicon packages include Python, Node, Remotion, Chrome Headless Shell and FFmpeg/FFprobe. The media tools use a pinned full-filter FFmpeg distribution for the original mixing operations; Remotion keeps its own compositor binaries. Ordinary-machine Catalog installation and update acceptance are still pending. This is a development candidate, not a completed public release.
 
 ## Development
 
@@ -58,13 +58,26 @@ corepack pnpm@10.34.5 run app:build -- --target windows-x86_64
 corepack pnpm@10.34.5 run dev -- --cdp-port 9236
 ```
 
+On macOS Apple Silicon, use the same public dependency installation and lifecycle commands, with this native media setup and target:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python3 -m pip install -r app_runtime/requirements-media.txt
+npm --prefix remotion-composer ci
+pnpm exec nimi-app build --target macos-aarch64 --production
+pnpm exec nimi-app pack --target macos-aarch64 --production
+pnpm run dev -- --cdp-port 9236
+```
+
+`predev` prepares the pinned native FFmpeg/FFprobe distribution. Production builds bundle Python 3.14.4, Node 24.15.0, the locked composer and its headless browser; installed users do not need a separate Python, Node or Homebrew setup. Archive checksums are pinned for both platforms. Use a Python version supported by the pinned media wheels for development (the packaged build uses 3.14.4).
+
 The official scaffold was integrated using app-tools' existing-App adoption workflow. There is no managed scaffold lock. `sync` maintains package-owned projections; `check`, `dev`, `app:build` and `pack` use the official lifecycle owners. The App-owned build adds the selected media runtime. Native media and checkpoint tests run against that completed package during the build; `test:app` runs the application control tests without requiring media setup.
 
-To reopen an existing development project, list registrations with `pnpm exec nimi-app dev --list-registrations`, then use `pnpm run dev -- --resume <selector> --cdp-port 9236`. Selectors belong to the current Desktop session; list again after restarting Nimi. A new development registration has its own project data. CDP acceptance attaches to the exact Desktop-supervised OpenMontage window. Development media setup currently uses Windows executables; the macOS package branch in the generic Electron script does not establish macOS media support.
+To reopen an existing development project, list registrations with `pnpm exec nimi-app dev --list-registrations`, then use `pnpm run dev -- --resume <selector> --cdp-port 9236`. Selectors belong to the current Desktop session; list again after restarting Nimi. A new development registration has its own project data. CDP acceptance attaches to the exact Desktop-supervised OpenMontage window. The media path resolver selects the native Python, Node, FFmpeg and browser locations. On macOS, media workers run in owned process groups so cancellation includes their child tools. Packaged media is added before ad-hoc signing; this supplies neither Developer ID nor notarization.
 
 ## Release and licensing
 
-The target is Windows x86_64. Release through the managed protected-tag GitHub workflow, immutable Release assets and the separate Nimi App Registry review. The Nimi platform account does not supply GitHub publishing credentials.
+The declared targets are Windows x86_64 and macOS Apple Silicon (ARM64). Intel macOS is not a declared target. Release through the managed protected-tag GitHub workflow, immutable Release assets and the separate Nimi App Registry review. The Nimi platform account does not supply GitHub publishing credentials.
 
 The upstream AGPL license is retained. Bundled components keep their own terms and notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The publisher has confirmed Remotion Free License eligibility.
 

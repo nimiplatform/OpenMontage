@@ -25,24 +25,26 @@ export function resolveMediaRuntimePaths(input: {
   packaged: boolean;
   resourcesPath: string;
 }): MediaRuntimePaths {
+  const windows = process.platform === 'win32';
+  const executableSuffix = windows ? '.exe' : '';
   if (input.packaged) {
     const runtimeRoot = path.join(input.resourcesPath, 'openmontage-media');
     const mediaBinaries = path.join(runtimeRoot, 'ffmpeg/bin');
     return {
       appRoot: path.join(runtimeRoot, 'app'), scratchRoot: input.scratchRoot,
-      python: path.join(runtimeRoot, 'python', 'python.exe'),
-      ffmpeg: path.join(mediaBinaries, 'ffmpeg.exe'),
-      ffprobe: path.join(mediaBinaries, 'ffprobe.exe'),
-      nodeDirectory: path.join(runtimeRoot, 'node'),
-      browser: path.join(runtimeRoot, 'browser', 'chrome-headless-shell.exe'),
+      python: path.join(runtimeRoot, 'python', windows ? 'python.exe' : 'bin/python3'),
+      ffmpeg: path.join(mediaBinaries, 'ffmpeg' + executableSuffix),
+      ffprobe: path.join(mediaBinaries, 'ffprobe' + executableSuffix),
+      nodeDirectory: path.join(runtimeRoot, windows ? 'node' : 'node/bin'),
+      browser: path.join(runtimeRoot, 'browser', 'chrome-headless-shell' + executableSuffix),
     };
   }
-  const mediaBinaries = path.join(input.appRoot, '.nimi/local/media-build/ffmpeg-9.0.1-essentials_build/bin');
+  const mediaBinaries = path.join(input.appRoot, '.nimi/local/media-build', windows ? 'ffmpeg-9.0.1-essentials_build/bin' : 'ffmpeg-9.0.1-darwin-arm64/bin');
   return {
     appRoot: input.appRoot, scratchRoot: input.scratchRoot,
-    python: path.join(input.appRoot, '.venv', 'Scripts', 'python.exe'),
-    ffmpeg: path.join(mediaBinaries, 'ffmpeg.exe'),
-    ffprobe: path.join(mediaBinaries, 'ffprobe.exe'),
+    python: path.join(input.appRoot, '.venv', windows ? 'Scripts/python.exe' : 'bin/python3'),
+    ffmpeg: path.join(mediaBinaries, 'ffmpeg' + executableSuffix),
+    ffprobe: path.join(mediaBinaries, 'ffprobe' + executableSuffix),
   };
 }
 
@@ -51,7 +53,7 @@ export function inspectMediaRuntime(paths: MediaRuntimePaths): MediaAvailability
     Python: paths.python, FFmpeg: paths.ffmpeg, FFprobe: paths.ffprobe,
     'OpenMontage worker': path.join(paths.appRoot, 'app_runtime', 'media_worker.py'),
     Remotion: path.join(paths.appRoot, 'remotion-composer', 'node_modules', '@remotion', 'cli', 'package.json'),
-    ...(paths.nodeDirectory ? { Node: path.join(paths.nodeDirectory, 'node.exe'), composition: path.join(paths.appRoot, 'remotion-composer', 'build', 'index.html') } : {}),
+    ...(paths.nodeDirectory ? { Node: path.join(paths.nodeDirectory, process.platform === 'win32' ? 'node.exe' : 'node'), composition: path.join(paths.appRoot, 'remotion-composer', 'build', 'index.html') } : {}),
     ...(paths.browser ? { Browser: paths.browser } : {}),
   };
   const missing = Object.entries(files).filter(([, file]) => !file || !existsSync(file)).map(([label]) => label);
@@ -61,10 +63,11 @@ export function inspectMediaRuntime(paths: MediaRuntimePaths): MediaAvailability
 export function mediaWorkerEnvironment(paths: MediaRuntimePaths, productionRoot: string): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = {};
   // Pass OS/toolchain context, not the parent App's complete environment.
-  for (const name of ['SystemRoot', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'HOMEDRIVE', 'HOMEPATH', 'NUMBER_OF_PROCESSORS', 'PATHEXT']) {
+  for (const name of ['SystemRoot', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'HOMEDRIVE', 'HOMEPATH', 'NUMBER_OF_PROCESSORS', 'PATHEXT', 'HOME', 'TMPDIR', 'LANG', 'LC_ALL']) {
     if (process.env[name]) environment[name] = process.env[name];
   }
-  environment.PATH = [path.dirname(paths.ffmpeg), path.dirname(paths.ffprobe), ...(paths.nodeDirectory ? [paths.nodeDirectory, path.join(process.env.SystemRoot || 'C:\\Windows', 'System32')] : [process.env.PATH || ''])].join(path.delimiter);
+  environment.PATH = [path.dirname(paths.ffmpeg), path.dirname(paths.ffprobe), ...(paths.nodeDirectory ? [paths.nodeDirectory, ...(process.platform === 'win32' ? [path.join(process.env.SystemRoot || 'C:\\Windows', 'System32')] : ['/usr/bin', '/bin', '/usr/sbin', '/sbin'])] : [process.env.PATH || ''])].join(path.delimiter);
+  environment.PYTHONNOUSERSITE = '1';
   environment.PYTHONUTF8 = '1';
   environment.PYTHONUNBUFFERED = '1';
   environment.PYTHONDONTWRITEBYTECODE = '1';
@@ -122,6 +125,12 @@ export class MediaRenderer {
     if (!child?.pid || child.exitCode !== null || child.signalCode !== null) return;
     if (!render.stopping) {
       render.stopping = new Promise<void>((resolve, reject) => {
+        if (process.platform !== 'win32') {
+          // Each worker leads an owned process group, including Node/FFmpeg/browser children.
+          try { process.kill(-child.pid!, 'SIGKILL'); resolve(); }
+          catch (error) { if ((error as NodeJS.ErrnoException).code === 'ESRCH') resolve(); else reject(error); }
+          return;
+        }
         execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, (error) => {
           if (error && child.exitCode === null && child.signalCode === null) reject(error);
           else resolve();
@@ -263,6 +272,7 @@ export class MediaRenderer {
     return new Promise((resolve, reject) => {
       const child = spawn(this.paths.python, ['-m', 'app_runtime.media_worker'], {
         cwd: this.paths.appRoot, env: mediaWorkerEnvironment(this.paths, workspace), windowsHide: true,
+        detached: process.platform !== 'win32',
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       active.child = child;
