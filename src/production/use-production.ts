@@ -82,13 +82,14 @@ export function useProductionController() {
   }, []);
 
   const refreshVoices = useCallback(async () => {
-    setVoicesLoaded(false); setVoiceError(''); setDisplayedConfig(null);
+    setVoicesLoaded(false); setVoices([]); setVoiceError(''); setDisplayedConfig(null);
     try {
       const client = getNimiLocalAppClient();
       const snapshot = await client.aiConfig.get();
+      setDisplayedConfig(snapshot);
       const result = await client.aiConfig.listOptions({ kind: 'preset-voices' });
       if (result.kind !== 'preset-voices') throw new Error('音色列表格式不正确。');
-      setVoices(result.options); setVoicesLoaded(true); setDisplayedConfig(snapshot);
+      setVoices(result.options); setVoicesLoaded(true);
     } catch (cause) { setVoiceError(errorMessage(cause)); }
   }, []);
 

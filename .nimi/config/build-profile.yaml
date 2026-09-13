@@ -15,7 +15,7 @@ targets:
   macos-aarch64:
     os: macos
     arch: arm64
-    build_command: pnpm run build:electron:production
+    build_command: /bin/sh -c 'ulimit -n 65536 && pnpm run build:electron:production'
     payload_path: dist-electron-package/openmontage-nimi-app-shell-darwin-arm64
     runtime_entry: payload/openmontage-nimi-app-shell.app/Contents/MacOS/openmontage-nimi-app-shell
 profile_role: developer-workflow-input
