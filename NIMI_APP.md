@@ -25,7 +25,7 @@ The verified hybrid sample combines a provided video excerpt, a newly generated 
 
 The earlier live Dashscope sample used a Runtime with the native video parameter mapping and `wan2.7-t2v` catalog entry. Use a Runtime compatible with the selected SDK/Kit/native combination and the task's configured capabilities; dependency and build checks do not replace live provider or installed Runtime acceptance.
 
-The Windows x86_64 and macOS Apple Silicon packages include Python, Node, Remotion, Chrome Headless Shell and FFmpeg/FFprobe. The media tools use a pinned full-filter FFmpeg distribution for the original mixing operations; Remotion keeps its own compositor binaries. Ordinary-machine Catalog installation and update acceptance are still pending. This is a development candidate, not a completed public release.
+The Windows x86_64 and macOS Apple Silicon packages include Python, Node, Remotion, Chrome Headless Shell and FFmpeg/FFprobe. The media tools use a pinned full-filter FFmpeg distribution for the original mixing operations; Remotion keeps its own compositor binaries. Ordinary-machine Catalog installation and update acceptance are still pending. Catalog availability requires the separate Registry admission process.
 
 ## Development
 
