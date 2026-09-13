@@ -53,18 +53,33 @@ test('the local media runtime renders actual image/audio inputs to a 720p MP4', 
     const silence = spawnSync(paths.python, ['-B', '-c', 'import sys,wave\nwith wave.open(sys.argv[1], "wb") as audio:\n audio.setparams((1,2,24000,0,"NONE","not compressed"))\n audio.writeframes(bytes(24000))', path.join(scratch, 'silent.wav')], { encoding: 'utf8', windowsHide: true });
     assert.equal(silence.status, 0, silence.stderr);
     await assert.rejects(renderer.render({ renderId: 'silent-narration-test', scenes: [{ visual: image, visualMimeType: 'image/png', narration: new Uint8Array(await readFile(path.join(scratch, 'silent.wav'))), narrationMimeType: 'audio/wav' }] }), /effectively silent/);
-    const canceled = assert.rejects(renderer.render({ renderId: 'dispose-active-render', scenes: [{ visual: image, visualMimeType: 'image/png', narration, narrationMimeType: 'audio/wav' }] }), /canceled/);
+    const canceled = assert.rejects(renderer.render({ renderId: 'dispose-active-render', scenes: [{ visual: image, visualMimeType: 'image/png', ...(process.platform === 'darwin' ? { durationSeconds: 30 } : { narration, narrationMimeType: 'audio/wav' }) }] }), /canceled/);
+    let browserPid;
     let mediaWorkStarted = false;
     for (let attempt = 0; attempt < 100; attempt++) {
       const directories = await readdir(paths.scratchRoot);
       for (const directory of directories) {
-        if (await access(path.join(paths.scratchRoot, directory, 'narration.wav')).then(() => true, () => false)) mediaWorkStarted = true;
+        if (process.platform === 'darwin') {
+          const processes = spawnSync('/bin/ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
+          assert.equal(processes.status, 0, processes.stderr);
+          // Use the browser executable from this exact test package, not another App.
+          const browser = processes.stdout.split('\n').find((line) => line.trim().replace(/^\d+\s+/, '').startsWith(paths.browser + ' '));
+          if (browser) { browserPid = Number(browser.trim().split(/\s+/)[0]); mediaWorkStarted = true; }
+        } else if (await access(path.join(paths.scratchRoot, directory, 'narration.wav')).then(() => true, () => false)) mediaWorkStarted = true;
       }
       if (mediaWorkStarted) break;
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     assert.ok(mediaWorkStarted, 'the actual media worker must be running before disposal');
     await renderer.dispose();
+    if (browserPid) {
+      let alive = true;
+      for (let attempt = 0; attempt < 50; attempt++) {
+        try { process.kill(browserPid, 0); } catch (error) { if (error.code === 'ESRCH') { alive = false; break; } throw error; }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      assert.equal(alive, false, 'Host disposal must terminate Remotion’s detached browser');
+    }
     assert.deepEqual(await readdir(paths.scratchRoot), [], 'Host disposal waits for owned-directory cleanup');
     await canceled;
   } finally {

@@ -77,6 +77,36 @@ export function mediaWorkerEnvironment(paths: MediaRuntimePaths, productionRoot:
   return environment;
 }
 
+async function terminateMediaProcessGroups(pid: number): Promise<void> {
+  const signal = (group: number, value: NodeJS.Signals) => {
+    try { process.kill(-group, value); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+  };
+  // Freeze the owned worker group before discovery so Node cannot launch a new
+  // detached browser between the process snapshot and termination. Remotion's
+  // browser is a separate process group and must be terminated explicitly.
+  signal(pid, 'SIGSTOP');
+  try {
+    const output = await new Promise<string>((resolve, reject) => {
+      execFile('/bin/ps', ['-axo', 'pid=,ppid=,pgid='], { encoding: 'utf8' }, (error, stdout) => error ? reject(error) : resolve(stdout));
+    });
+    const processes = output.trim().split('\n').map((line) => {
+      const [id, parent, group] = line.trim().split(/\s+/).map(Number);
+      return { id, parent, group };
+    });
+    const descendants = new Set([pid]);
+    let previousSize: number;
+    do {
+      previousSize = descendants.size;
+      for (const process of processes) if (descendants.has(process.parent)) descendants.add(process.id);
+    } while (descendants.size !== previousSize);
+    const groups = new Set(processes.filter((process) => descendants.has(process.id) && descendants.has(process.group)).map((process) => process.group));
+    for (const group of groups) if (group !== pid) signal(group, 'SIGKILL');
+  } finally {
+    signal(pid, 'SIGKILL');
+  }
+}
+
 function validateRenderInput(input: MediaRenderInput): void {
   if (!input || typeof input.renderId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(input.renderId)) {
     throw new Error('A valid media render identifier is required.');
@@ -126,15 +156,20 @@ export class MediaRenderer {
     if (!render.stopping) {
       render.stopping = new Promise<void>((resolve, reject) => {
         if (process.platform !== 'win32') {
-          // Each worker leads an owned process group, including Node/FFmpeg/browser children.
-          try { process.kill(-child.pid!, 'SIGKILL'); resolve(); }
-          catch (error) { if ((error as NodeJS.ErrnoException).code === 'ESRCH') resolve(); else reject(error); }
+          void terminateMediaProcessGroups(child.pid!).then(resolve, reject);
           return;
         }
-        execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, (error) => {
-          if (error && child.exitCode === null && child.signalCode === null) reject(error);
-          else resolve();
-        });
+        const terminate = (retry: boolean) => {
+          execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, (error) => {
+            if (error && child.exitCode === null && child.signalCode === null) {
+              // A descendant can exit while taskkill traverses the tree. Retry
+              // once only while our original worker handle is still running.
+              if (retry) terminate(false);
+              else reject(error);
+            } else resolve();
+          });
+        };
+        terminate(true);
       });
     }
     await render.stopping;
