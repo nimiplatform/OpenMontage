@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@electron/osx-sign@2.7.0':
+    hash: fedc495cfb175ed1589b4467e4fb0f27d225bc4d201facf6c668bc461b8d7f0b
+    path: patches/@electron__osx-sign@2.7.0.patch
+
 importers:
 
   .:
@@ -2456,7 +2461,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/osx-sign@2.7.0':
+  '@electron/osx-sign@2.7.0(patch_hash=fedc495cfb175ed1589b4467e4fb0f27d225bc4d201facf6c668bc461b8d7f0b)':
     dependencies:
       debug: 4.4.3
       isbinaryfile: 4.0.10
@@ -2471,7 +2476,7 @@ snapshots:
       '@electron/asar': 4.3.0
       '@electron/get': 5.1.0
       '@electron/notarize': 3.1.1
-      '@electron/osx-sign': 2.7.0
+      '@electron/osx-sign': 2.7.0(patch_hash=fedc495cfb175ed1589b4467e4fb0f27d225bc4d201facf6c668bc461b8d7f0b)
       '@electron/universal': 3.0.6
       '@electron/windows-sign': 2.1.0
       '@malept/cross-spawn-promise': 2.0.0

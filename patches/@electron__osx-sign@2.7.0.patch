@@ -1,0 +1,28 @@
+diff --git a/dist/util.js b/dist/util.js
+index 7674259258cb14f846c3a2ab75a0e22dbe1b79ce..c4e3956d266092a1592c782fd3b525d771dd5753 100644
+--- a/dist/util.js
++++ b/dist/util.js
+@@ -115,7 +115,11 @@ export async function walk(dirPath) {
+     debugLog('Walking... ' + dirPath);
+     async function _walkAsync(dirPath) {
+         const children = await fs.promises.readdir(dirPath);
+-        return await Promise.all(children.map(async (child) => {
++        // The App bundles Python and Node trees; keep the binary scan bounded
++        // instead of opening every file concurrently on macOS build runners.
++        const results = [];
++        for (const child of children) {
++            results.push(await (async () => {
+             const filePath = path.resolve(dirPath, child);
+             const stat = await fs.promises.lstat(filePath);
+             if (stat.isFile()) {
+@@ -138,7 +142,9 @@ export async function walk(dirPath) {
+                 return walkResult;
+             }
+             return null;
+-        }));
++            })());
++        }
++        return results;
+     }
+     const allPaths = await _walkAsync(dirPath);
+     return compactFlattenedList(allPaths);

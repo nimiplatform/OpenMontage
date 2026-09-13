@@ -78,6 +78,7 @@ try {
   await mkdir(path.join(productionSourceRoot, 'dist-electron'), { recursive: true });
   await copyFile(path.join(appRoot, 'package.json'), path.join(productionSourceRoot, 'package.json'));
   await copyFile(path.join(appRoot, 'pnpm-lock.yaml'), path.join(productionSourceRoot, 'pnpm-lock.yaml'));
+  await cp(path.join(appRoot, 'patches'), path.join(productionSourceRoot, 'patches'), { recursive: true });
   await cp(path.join(appRoot, 'dist'), path.join(productionSourceRoot, 'dist'), { recursive: true, force: false });
   await mkdir(path.join(productionSourceRoot, 'assets'), { recursive: true });
   await copyFile(path.join(appRoot, 'assets', 'app-icon.png'), path.join(productionSourceRoot, 'assets', 'app-icon.png'));

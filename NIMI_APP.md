@@ -42,7 +42,7 @@ as a mandatory onboarding step for every coding task. The current hybrid
 slice can validate tooling changes; the remaining product workflows above
 retain their separate completion requirements.
 
-Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.2, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. No Nimi workspace overrides or modified installed packages are used. The App's single-package workspace isolates it from enclosing workspaces.
+Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.2, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
 
 App Tools maintains the project lifecycle skill and its independent AGENTS block. Nimi-coding 0.6.3 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
 
