@@ -36,8 +36,8 @@ importers:
         specifier: ^20.3.0
         version: 20.3.0
       '@nimiplatform/app-tools':
-        specifier: ^0.5.2
-        version: 0.5.2(vite@7.3.6(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+        specifier: ^0.5.3
+        version: 0.5.3(vite@7.3.6(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       '@nimiplatform/nimi-coding':
         specifier: 0.6.3
         version: 0.6.3
@@ -578,8 +578,8 @@ packages:
     os: [linux]
     libc: [glibc]
 
-  '@nimiplatform/app-tools@0.5.2':
-    resolution: {integrity: sha512-tew2oN1DM6FVHwLolh9QG/rgs6fMNkyd2NISOA7590DW6l2L6QB+99qTDgZq3jw5AR7Dl7hW5s3MppjEDnZKlA==}
+  '@nimiplatform/app-tools@0.5.3':
+    resolution: {integrity: sha512-gyInd7eQAazZoYATp8+tjNO3FEXp8IyPDKpQsjo4K9CzD8RiQwwQi5OkdH3iB8WQ3zK2DnnWDd1uzjV14D4vQA==}
     engines: {node: '>=24.0.0'}
     hasBin: true
     peerDependencies:
@@ -2754,7 +2754,7 @@ snapshots:
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
 
-  '@nimiplatform/app-tools@0.5.2(vite@7.3.6(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@nimiplatform/app-tools@0.5.3(vite@7.3.6(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       pngjs: 7.0.0
       postcss: 8.5.28

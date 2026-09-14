@@ -42,7 +42,7 @@ as a mandatory onboarding step for every coding task. The current hybrid
 slice can validate tooling changes; the remaining product workflows above
 retain their separate completion requirements.
 
-Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.2, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
+Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.3, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
 
 App Tools maintains the project lifecycle skill and its independent AGENTS block. Nimi-coding 0.6.3 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
 
@@ -76,6 +76,13 @@ The official scaffold was integrated using app-tools' existing-App adoption work
 To reopen an existing development project, list registrations with `pnpm exec nimi-app dev --list-registrations`, then use `pnpm run dev -- --resume <selector> --cdp-port 9236`. Selectors belong to the current Desktop session; list again after restarting Nimi. A new development registration has its own project data. CDP acceptance attaches to the exact Desktop-supervised OpenMontage window. The media path resolver selects the native Python, Node, FFmpeg and browser locations. On macOS, media workers run in owned process groups so cancellation includes their child tools. Packaged media is added before ad-hoc signing; this supplies neither Developer ID nor notarization.
 
 ## Release and licensing
+
+Before the first release, follow the [app-tools publishing setup](https://github.com/nimiplatform/nimi/blob/main/app-tools/README.md#publishing-on-github).
+Configure `NIMI_REPOSITORY_ADMIN_TOKEN` in this repository's Actions secrets with
+**Administration: Read-only**. It only checks tag protection and Release
+immutability; actual Release uploads use GitHub's built-in token. Local
+development does not need this credential. A secret in another App repository
+is not inherited.
 
 The declared targets are Windows x86_64 and macOS Apple Silicon (ARM64). Intel macOS is not a declared target. Release through the managed protected-tag GitHub workflow, immutable Release assets and the separate Nimi App Registry review. The Nimi platform account does not supply GitHub publishing credentials.
 
