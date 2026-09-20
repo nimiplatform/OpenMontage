@@ -1,6 +1,6 @@
 app_id: openmontage.studio
 display_name: OpenMontage
-version: 0.1.0
+version: 0.1.1
 profile: standalone
 npm_package_name: openmontage-nimi-app
 cargo_package_name: openmontage-nimi-app-shell
@@ -17,6 +17,47 @@ capability_contract_refs:
 required_standardized_feature_refs: []
 storage_policy:
   kind: nimi-mediated-default
+safety_profile:
+  ai:
+    direct_interaction: true
+    interaction_notice: absent
+    outputs:
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: text
+        publication_control: not-applicable
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: image
+        publication_control: not-applicable
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: audio
+        publication_control: not-applicable
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: video
+        publication_control: not-applicable
+    risk_features: []
+    subject_notice: not-applicable
+  content_descriptors: []
+  data_practices:
+    commercial_features: []
+    publisher_direct_external_network: false
+    sensitive_data_categories: []
+    telemetry: []
+    third_party_account: none
+    user_content_sharing: none
+  high_impact_decision_uses: []
+  intended_audience: general
 support_manifest:
   diagnostics_bundle_fields:
     - app_version

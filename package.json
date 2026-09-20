@@ -1,6 +1,6 @@
 {
   "name": "openmontage-nimi-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "AGPL-3.0-only",
   "private": true,
   "type": "module",
@@ -59,7 +59,7 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
     "yaml": "^2.9.0",
-    "@nimiplatform/app-tools": "^0.5.3",
+    "@nimiplatform/app-tools": "^0.7.5",
     "@nimiplatform/nimi-coding": "0.6.3"
   },
   "author": "OpenMontage contributors"

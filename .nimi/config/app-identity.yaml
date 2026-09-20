@@ -1,6 +1,6 @@
 app_id: openmontage.studio
 display_name: OpenMontage
-version: 0.1.0
+version: 0.1.1
 npm_package_name: openmontage-nimi-app
 cargo_package_name: openmontage-nimi-app-shell
 tauri_identifier: ai.nimi.apps.openmontage.studio

@@ -1,3 +1,7 @@
+# OpenMontage for Nimi 0.1.1
+
+Adds the publisher declaration for audience, AI text/image/audio/video outputs and current data practices. Keeps the supported SDK 0.12 / Kit 0.8 pairing and the existing integration limits below; no new workflow, launch gate or safety certification is introduced. Publication, Registry admission and installed acceptance remain separate steps.
+
 # OpenMontage for Nimi 0.1.0
 
 Nimi provides the platform account, App Access, AI configuration and AI execution. OpenMontage retains production workflows, editorial choices and approvals.
