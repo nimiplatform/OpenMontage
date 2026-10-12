@@ -49,3 +49,6 @@ Makefile    text eol=lf
 *.ttf   binary
 *.otf   binary
 *.pdf   binary
+
+# Preserve the reviewed license bytes in cross-platform release packages.
+LICENSE -text

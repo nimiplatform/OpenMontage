@@ -30,7 +30,7 @@ export async function transcribeSource(input: {
       if (input.stopped()) throw new Error('已停止转写。');
     } catch (cause) { await input.onChange({ ...state, pendingSubmission: false }); throw cause; }
     try {
-      job = (await client.ai.scenarioJobs.submit({ type: 'speech-transcribe', mimeType: audio.mimeType, language: options.language.trim(), timestamps: options.timestamps, prompt: '', responseFormat: options.timestamps ? 'json' : 'text', audioSource: { type: 'bytes', bytes: [...audio.bytes] } }, { timeoutMs: 240000 })).job;
+      job = (await client.ai.scenarioJobs.submit({ type: 'speech-transcribe', mimeType: audio.mimeType, language: options.language.trim(), timestamps: options.timestamps, prompt: '', responseFormat: options.timestamps ? 'json' : 'text', audioSource: { type: 'bytes', bytes: new Uint8Array(audio.bytes) } })).job;
     } catch (cause) {
       const reason = cause && typeof cause === 'object' && 'reasonCode' in cause ? String(cause.reasonCode).toLowerCase() : '';
       if (['sdk_local_app_input_invalid', 'ai-input-invalid', 'ai-media-spec-invalid', 'ai-media-option-unsupported'].includes(reason)) await input.onChange({ ...state, pendingSubmission: false });

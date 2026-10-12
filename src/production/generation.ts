@@ -75,7 +75,9 @@ export async function generateSceneMedia(input: {
   if (!job || ['failed', 'canceled', 'timeout'].includes(job.status)) {
     if (input.stopped()) throw new Error('已停止继续生成。');
     const spec: NimiLocalAppScenarioJobSpec = kind === 'image'
-      ? { type: 'image-generate', prompt: scene.imagePrompt, negativePrompt: '', n: 1, size: '1280x720', aspectRatio: '16:9', quality: '', style: '', referenceImages: [], referenceImageArtifactId: '', mask: '', responseFormat: '' }
+      // The final composition owns the 720p canvas. Source images use the
+      // selected Nimi model's native geometry and configured defaults.
+      ? { type: 'image-generate', prompt: scene.imagePrompt, negativePrompt: '', n: 1, size: '', aspectRatio: '', quality: '', style: '', referenceImages: [], referenceImageArtifactId: '', mask: '', responseFormat: '' }
       : kind === 'video'
         ? { type: 'video-generate', prompt: scene.imagePrompt, negativePrompt: '', mode: input.referenceArtifactId ? 'i2v-first-frame' : 't2v', content: [{ type: 'text', role: 'prompt', text: scene.imagePrompt }, ...(input.referenceArtifactId ? [{ type: 'artifact-ref' as const, role: 'first-frame' as const, artifactId: input.referenceArtifactId }] : [])], options: { resolution: '720p', ratio: input.referenceArtifactId ? '' : '16:9', durationSec: Math.round(scene.durationSeconds || 5) } }
         : kind === 'music'
@@ -91,7 +93,7 @@ export async function generateSceneMedia(input: {
       throw error;
     }
     try {
-      job = (await client.ai.scenarioJobs.submit(spec, { timeoutMs: 240000 })).job;
+      job = (await client.ai.scenarioJobs.submit(spec)).job;
     } catch (cause) {
       // These exact input rejections happen before the owner creates a Job.
       // Transport loss and output/projection failures remain uncertain.

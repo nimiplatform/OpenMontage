@@ -36,6 +36,19 @@ async function runStream(events) {
 
 const delta = (sequence, text) => ({ type: 'delta', sequence, traceId: 'stream-trace', itemIndex: 0, text });
 
+test('reasoning summaries never finish or enter the text artifact', async () => {
+  const { result, partials, canceled } = await runStream([
+    delta('1', 'hello '),
+    { type: 'reasoning-summary', sequence: '2', traceId: 'stream-trace', itemIndex: 1, text: 'private explanation', itemCompleted: true },
+    delta('3', 'world'),
+    { type: 'completed', sequence: '4', traceId: 'stream-trace', finishReason: 'stop' },
+  ]);
+  assert.equal(result.ok, true);
+  assert.equal(result.output.text, 'hello world');
+  assert.deepEqual(partials, ['hello ', 'hello world']);
+  assert.equal(canceled, 1);
+});
+
 test('one-turn text continues past opaque state without displaying or completing on it', async () => {
   const { result, partials, canceled } = await runStream([
     delta('1', 'hello '),

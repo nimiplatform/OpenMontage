@@ -1,6 +1,6 @@
 app_id: openmontage.studio
 display_name: OpenMontage
-version: 0.1.1
+version: 0.1.2
 profile: standalone
 manifest_role: submitted-input
 app_access:

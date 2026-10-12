@@ -2,6 +2,24 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ConfigurationChangedError, generateSceneMedia } from '../src/production/generation.ts';
 
+test('image generation keeps the prompt and count while leaving source geometry to Nimi configuration', async () => {
+  let submitted;
+  await assert.rejects(generateSceneMedia({
+    client: {
+      aiConfig: { get: async () => ({ revision: 'approved', effectiveSelections: [{ capabilityContract: 'image.generate', state: 'ready' }] }) },
+      ai: { scenarioJobs: { submit: async spec => { submitted = spec; throw new Error('Captured submission'); } } },
+    },
+    scene: { title: 'scene', narration: 'text', imagePrompt: 'Wide project diagram' }, kind: 'image',
+    voiceId: '', projectId: 'project', existing: {}, approvedRevision: 'approved',
+    stopped: () => false, onChange: async () => {}, onJob: () => {}, onStatus: () => {},
+  }), /Captured submission/);
+  assert.equal(submitted.type, 'image-generate');
+  assert.equal(submitted.prompt, 'Wide project diagram');
+  assert.equal(submitted.n, 1);
+  assert.equal(submitted.size, '');
+  assert.equal(submitted.aspectRatio, '');
+});
+
 test('a configuration change during the durable pre-submit save prevents consumption', async () => {
   let revision = 'approved';
   let submitted = false;

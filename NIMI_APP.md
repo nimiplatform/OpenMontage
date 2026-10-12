@@ -2,6 +2,12 @@
 
 OpenMontage video production with Nimi providing the platform session, App Access, model configuration and AI execution. OpenMontage owns its production workflows, editorial choices and approvals. The Nimi platform account is separate from any application-specific account or permissions; this integration does not add a business-account system.
 
+## Windows candidate 0.1.2 — 2026-10-13
+
+Unreleased working tree with SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Type checking and 24 App tests pass; seven packaged-media tests cover real Windows rendering, edits, scratch cleanup and Chinese subtitles. Reasoning summaries no longer end text artifacts, Jobs use the current contract, and source image geometry follows Nimi configuration while the final canvas stays 1280×720.
+
+The supervised App against installed Nimi 0.2.2 completed the quick explainer with qwen3.8-flash, Qwen Image 3 Pro and Qwen3 TTS/Cherry. Its actual image is 2752×1536 and narration is 34.56 seconds. It rendered and exported a 4,581,022-byte H.264/AAC MP4, 1280×720 and 34.624 seconds; complete decoding and a real frame inspection passed. Reopening the App view restored the project and video. Ordinary Qwen Image 3 output was rejected by Runtime validation; Qwen Image 2 returned a provider failure. Their exact causes remain unconfirmed because installed service logs are unavailable. Candidate installation and the other incomplete workflows remain NOT-VERIFIED. Earlier macOS evidence retains its original scope.
+
 ## Use the App
 
 1. Open OpenMontage through Nimi. Start or continue a project in the Backlot library. Configure the capabilities your task uses in **AI 设置**.
@@ -42,7 +48,7 @@ as a mandatory onboarding step for every coding task. The current hybrid
 slice can validate tooling changes; the remaining product workflows above
 retain their separate completion requirements.
 
-Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.5.3, SDK 0.12.0 and Kit/native 0.8.0, with nimi-coding pinned to 0.6.3. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
+Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.12.2, SDK 0.21.0 and Kit/native 0.19.3, with nimi-coding pinned to 0.6.5. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
 
 App Tools maintains the project lifecycle skill and its independent AGENTS block. Nimi-coding 0.6.3 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
 

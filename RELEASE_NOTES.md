@@ -1,3 +1,7 @@
+# 0.1.2 — Windows candidate (unreleased)
+
+Migrates to public SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Reasoning summaries no longer end a text artifact, Job submission uses the current contract, and transcription passes binary bytes. Image source geometry follows the selected Nimi model; the final composition remains 1280×720. Windows supervised Qwen text, Qwen Image 3 Pro and Qwen3 TTS/Cherry produced a real 34.624-second H.264/AAC MP4 which exported and fully decoded. Existing unintegrated workflows retain their earlier limits; this does not claim all twelve pipelines or Catalog installation passed.
+
 # OpenMontage for Nimi 0.1.1
 
 Adds the publisher declaration for audience, AI text/image/audio/video outputs and current data practices. Keeps the supported SDK 0.12 / Kit 0.8 pairing and the existing integration limits below; no new workflow, launch gate or safety certification is introduced. Publication, Registry admission and installed acceptance remain separate steps.
