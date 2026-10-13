@@ -6,7 +6,28 @@ OpenMontage video production with Nimi providing the platform session, App Acces
 
 Published [v0.1.2](https://github.com/nimiplatform/OpenMontage/releases/tag/v0.1.2) for Windows x86_64 and macOS arm64 with SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Type checking and 24 App tests pass; seven packaged-media tests cover real Windows rendering, edits, scratch cleanup and Chinese subtitles. Reasoning summaries no longer end text artifacts, Jobs use the current contract, and source image geometry follows Nimi configuration while the final canvas stays 1280×720. [Registry candidate #93](https://github.com/nimiplatform/nimi-app-registry/pull/93) passes the candidate checks and still awaits human admission; publication does not establish installed acceptance.
 
-The supervised App against installed Nimi 0.2.2 completed the quick explainer with qwen3.8-flash, Qwen Image 3 Pro and Qwen3 TTS/Cherry. Its actual image is 2752×1536 and narration is 34.56 seconds. It rendered and exported a 4,581,022-byte H.264/AAC MP4, 1280×720 and 34.624 seconds; complete decoding and a real frame inspection passed. Reopening the App view restored the project and video. Ordinary Qwen Image 3 output was rejected by Runtime validation; Qwen Image 2 returned a provider failure. Their exact causes remain unconfirmed because installed service logs are unavailable. Candidate installation and the other incomplete workflows remain NOT-VERIFIED. Earlier macOS evidence retains its original scope.
+The supervised App against installed Nimi 0.2.2 completed the quick explainer with qwen3.8-flash, Qwen Image 3 Pro and Qwen3 TTS/Cherry. Its actual image is 2752×1536 and narration is 34.56 seconds. It rendered and exported a 4,581,022-byte H.264/AAC MP4, 1280×720 and 34.624 seconds; complete decoding and a real frame inspection passed. Reopening the App view restored the project and video. Ordinary Qwen Image 3 output was rejected by Runtime validation; Qwen Image 2 returned a provider failure. Their exact causes remain unconfirmed because installed service logs are unavailable. These earlier results did not include installation; the October 14 installed results below extend that scope. Other incomplete workflows remain NOT-VERIFIED. Earlier macOS evidence retains its original scope.
+
+On October 14, Nimi 0.2.4-rc.1 imported the exact published Windows 0.1.2
+archive (SHA-256 `5c0c23522b499aa1f32cddc3ef138a1101dc8e84935401d6e74e9102b588f6c6`)
+and launched its release-directory Host. The stored text/image/synthesis
+selections correctly reported a stale Cloud catalogue; reselecting the same
+current qwen3.8-flash, qwen-image-3.0-pro and qwen3-tts-flash resources restored
+them. A new one-scene fictional Q58 explainer generated its reviewed script,
+image and 37.44-second Cherry narration, which played to its end. After the
+formal material approval, the packaged local media worker completed composition
+in about 21 seconds and saved the actual result through Nimi storage.
+
+The stored MP4 is 14,259,359 bytes, H.264/AAC, 1280 x 720 and 37.525333 seconds.
+Full FFmpeg decoding with `-xerror` passed, and a frame extracted from that
+actual file was visually checked. The project is
+`f6fb5411-3526-427a-8818-da464e77ae61`; its composition checkpoint is completed.
+A Windows Security network-access prompt for the bundled Node.js obscured the
+window and made earlier UI reads appear stuck. This is not a render failure.
+The system prompt needs the user to dismiss it: installed video playback,
+native export and post-render Home relaunch are still NOT-VERIFIED. This extends
+the earlier development results only for the stated quick-explainer slice;
+the remaining original workflows below are not newly claimed as integrated.
 
 ## Use the App
 
