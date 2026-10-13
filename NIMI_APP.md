@@ -2,9 +2,9 @@
 
 OpenMontage video production with Nimi providing the platform session, App Access, model configuration and AI execution. OpenMontage owns its production workflows, editorial choices and approvals. The Nimi platform account is separate from any application-specific account or permissions; this integration does not add a business-account system.
 
-## Windows candidate 0.1.2 — 2026-10-13
+## Windows release 0.1.2 — 2026-10-13
 
-Unreleased working tree with SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Type checking and 24 App tests pass; seven packaged-media tests cover real Windows rendering, edits, scratch cleanup and Chinese subtitles. Reasoning summaries no longer end text artifacts, Jobs use the current contract, and source image geometry follows Nimi configuration while the final canvas stays 1280×720.
+Published [v0.1.2](https://github.com/nimiplatform/OpenMontage/releases/tag/v0.1.2) for Windows x86_64 and macOS arm64 with SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Type checking and 24 App tests pass; seven packaged-media tests cover real Windows rendering, edits, scratch cleanup and Chinese subtitles. Reasoning summaries no longer end text artifacts, Jobs use the current contract, and source image geometry follows Nimi configuration while the final canvas stays 1280×720. [Registry candidate #93](https://github.com/nimiplatform/nimi-app-registry/pull/93) passes the candidate checks and still awaits human admission; publication does not establish installed acceptance.
 
 The supervised App against installed Nimi 0.2.2 completed the quick explainer with qwen3.8-flash, Qwen Image 3 Pro and Qwen3 TTS/Cherry. Its actual image is 2752×1536 and narration is 34.56 seconds. It rendered and exported a 4,581,022-byte H.264/AAC MP4, 1280×720 and 34.624 seconds; complete decoding and a real frame inspection passed. Reopening the App view restored the project and video. Ordinary Qwen Image 3 output was rejected by Runtime validation; Qwen Image 2 returned a provider failure. Their exact causes remain unconfirmed because installed service logs are unavailable. Candidate installation and the other incomplete workflows remain NOT-VERIFIED. Earlier macOS evidence retains its original scope.
 
@@ -23,7 +23,7 @@ Projects, checkpoints, job references and generated media use Nimi storage. Unch
 
 ## Current scope
 
-This development build covers the verified integration slices below. The migration target is the broader OpenMontage product with Nimi supplying the relevant platform and AI services; it is not a reduced explainer-only replacement.
+This version covers the verified integration slices below. The migration target is the broader OpenMontage product with Nimi supplying the relevant platform and AI services; it is not a reduced explainer-only replacement.
 
 The pipeline catalogue lists the original 12 business workflows and their actual stages. `nimi-image-explainer` remains a verified foundation. A basic original `hybrid` task has passed all seven stages in the supervised development App: source-media import, idea/script/scene-plan editing and approvals, real Nimi video/image/narration generation, source trims, scaling/motion, mixed Remotion composition, human review and project export. The quick explainer retains its prototype 1–12 scene control; original workflows are not capped at 12 by that control. Confirmed choices remain visible during revisions, and actual changes are retained in decision history. Missing costs are stated as unavailable.
 
