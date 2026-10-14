@@ -24,8 +24,14 @@ actual file was visually checked. The project is
 `f6fb5411-3526-427a-8818-da464e77ae61`; its composition checkpoint is completed.
 A Windows Security network-access prompt for the bundled Node.js obscured the
 window and made earlier UI reads appear stuck. This is not a render failure.
-The system prompt needs the user to dismiss it: installed video playback,
-native export and post-render Home relaunch are still NOT-VERIFIED. This extends
+After the prompt disappeared, the final Nimi 0.2.4 Windows installer was
+installed. Home launched this same installed App, the project library restored
+the completed project, and its video played to the full 37.525-second endpoint.
+The native Save dialog exported `.nimi/local/installed-q58.mp4`; its 14,259,359
+bytes match the stored result exactly (SHA-256
+`99124bf04de2f09860b9b602aafa33b3ba30a67341cfa85393a5cbf5d4980c11`).
+Installed playback, native export and post-render Home relaunch therefore pass.
+This extends
 the earlier development results only for the stated quick-explainer slice;
 the remaining original workflows below are not newly claimed as integrated.
 
