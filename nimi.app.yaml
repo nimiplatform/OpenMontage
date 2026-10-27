@@ -59,7 +59,6 @@ storage_policy:
 metadata:
   summary: "Produce narrated videos from source footage and generated media, with transcription, subtitles and local rendering powered by Nimi."
   icon: assets/app-icon.png
-  readme: NIMI_APP.md
   release_notes: RELEASE_NOTES.md
 local_development:
   electron:

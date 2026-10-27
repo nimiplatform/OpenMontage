@@ -1,7 +1,7 @@
 # OpenMontage - Agent Guide
 
 This is the upstream video-production guide. In this Nimi fork, begin with
-`AGENTS.md` and `NIMI_APP.md` to distinguish App development from producing a
+`AGENTS.md` and `NIMI_DEVELOPMENT.md` to distinguish App development from producing a
 video and to determine which workflows are actually integrated.
 
 Apply the relevant editorial, checkpoint and production knowledge below to the

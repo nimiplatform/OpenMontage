@@ -1,10 +1,10 @@
 # OpenMontage
 
 For App development, integration, maintenance or release work, start with
-`NIMI_APP.md`, the package manifest and the affected product entry. The Nimi
+`NIMI_DEVELOPMENT.md`, the package manifest and the affected product entry. The Nimi
 integration section below defines the platform boundary.
 
-For video-production tasks, use `NIMI_APP.md` for the currently integrated
+For video-production tasks, use `NIMI_DEVELOPMENT.md` for the currently integrated
 workflows and `AGENT_GUIDE.md` for relevant editorial and production guidance.
 The upstream command-line provider setup is reference material; it does not
 replace this fork's Nimi AI and account paths.
@@ -48,6 +48,7 @@ replace this fork's Nimi AI and account paths.
 - Keep App-owned product behavior, Host code, business accounts and non-AI services with this repository. Use the SDK/Kit Local App carrier for Nimi AI, configuration, storage and session access.
 - Development may consume complete local npm tarballs through the supported explicit overrides and version matrix; public-release preflight uses registry resolutions. Do not substitute source-workspace or directory links.
 - App Tools owns its lifecycle skill, this block, managed workflow and declared engineering fields; preserve other instructions, product source and licenses. Existing adoption does not create fresh scaffold intent or lock.
+- Maintain root NIMI_APP.md for the App’s actual users: purpose, first steps, configuration, data handling, limitations and help. Keep engineering instructions and acceptance logs in README/developer documentation. metadata.readme and README fallback are not supported; sync never overwrites or recreates this App-owned introduction.
 - Product-operation guides apply to their specific business tasks; they do not replace the Nimi development boundary.
 - Reuse the user's confirmed scope and authorization. Report command checks separately from actual App journeys; unrun relevant paths remain NOT-VERIFIED.
 <!-- nimi-app:managed:end -->
