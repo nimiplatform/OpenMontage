@@ -112,3 +112,13 @@ src-tauri/target/
 .nimi/local/
 .turbo/
 .vite/
+
+.env.*.local
+dist-web/
+dist-mobile/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/

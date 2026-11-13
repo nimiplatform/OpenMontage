@@ -1,4 +1,4 @@
-import type { NimiLocalAppClient, NimiLocalAppScenarioJob, NimiLocalAppScenarioJobSpec } from '@nimiplatform/sdk';
+import type { NimiAppRuntimeClient, NimiLocalAppScenarioJob, NimiLocalAppScenarioJobSpec } from '@nimiplatform/sdk/app';
 import type { StoryScene } from './storyboard.js';
 
 export type GeneratedMedia = { readonly artifactId: string; readonly relativePath: string; bytes: Uint8Array; readonly mimeType: string; durationSeconds?: number };
@@ -21,7 +21,7 @@ export async function measureMediaDuration(media: { bytes: Uint8Array; mimeType:
   } finally { player.removeAttribute('src'); player.load(); URL.revokeObjectURL(url); }
 }
 
-export async function assertConfiguration(client: NimiLocalAppClient, approvedRevision: string, capability?: string | readonly string[]): Promise<void> {
+export async function assertConfiguration(client: NimiAppRuntimeClient, approvedRevision: string, capability?: string | readonly string[]): Promise<void> {
   const snapshot = await client.aiConfig.get();
   if (snapshot.revision !== approvedRevision) throw new ConfigurationChangedError('AI 配置已更改。请重新确认方案后继续；已完成素材会保留。');
   for (const required of typeof capability === 'string' ? [capability] : capability || []) {
@@ -33,7 +33,7 @@ function terminal(job: NimiLocalAppScenarioJob): boolean {
   return ['completed', 'failed', 'canceled', 'timeout'].includes(job.status);
 }
 
-export async function completedJob(client: NimiLocalAppClient, job: NimiLocalAppScenarioJob, onStatus: (status: string) => void): Promise<NimiLocalAppScenarioJob> {
+export async function completedJob(client: NimiAppRuntimeClient, job: NimiLocalAppScenarioJob, onStatus: (status: string) => void): Promise<NimiLocalAppScenarioJob> {
   let current = job;
   if (!terminal(current)) {
     const stream = await client.ai.scenarioJobs.subscribe(current.jobId);
@@ -51,7 +51,7 @@ export async function completedJob(client: NimiLocalAppClient, job: NimiLocalApp
 }
 
 export async function generateSceneMedia(input: {
-  client: NimiLocalAppClient;
+  client: NimiAppRuntimeClient;
   scene: StoryScene;
   kind: MediaKind;
   referenceArtifactId?: string;
@@ -82,7 +82,9 @@ export async function generateSceneMedia(input: {
         ? { type: 'video-generate', prompt: scene.imagePrompt, negativePrompt: '', mode: input.referenceArtifactId ? 'i2v-first-frame' : 't2v', content: [{ type: 'text', role: 'prompt', text: scene.imagePrompt }, ...(input.referenceArtifactId ? [{ type: 'artifact-ref' as const, role: 'first-frame' as const, artifactId: input.referenceArtifactId }] : [])], options: { resolution: '720p', ratio: input.referenceArtifactId ? '' : '16:9', durationSec: Math.round(scene.durationSeconds || 5) } }
         : kind === 'music'
           ? { type: 'music-generate', prompt: scene.imagePrompt, lyrics: input.musicLyrics?.trim() || '', durationSeconds: Math.ceil(scene.durationSeconds || 30) }
-          : { type: 'speech-synthesize', text: scene.narration, language: '', audioFormat: 'mp3', emotion: '', voiceRef: input.voiceId ? { type: 'preset', id: input.voiceId } : null, timingMode: 'none', voiceRenderHints: null };
+          // As with source images, use the configured model's native output.
+          // Storage and composition consume the artifact's actual MIME type.
+          : { type: 'speech-synthesize', text: scene.narration, language: '', audioFormat: '', emotion: '', voiceRef: input.voiceId ? { type: 'preset', id: input.voiceId } : null, timingMode: 'none', voiceRenderHints: null };
     // Persist uncertainty before submitting: a lost response must not silently cause a second paid job.
     await onChange({ pendingSubmission: kind });
     try {

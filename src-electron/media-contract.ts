@@ -37,8 +37,10 @@ export type MediaAvailability = {
 
 export type OpenMontageMedia = {
   readonly inspect: () => Promise<MediaAvailability>;
-  readonly render: (input: MediaRenderInput) => Promise<MediaRenderResult>;
-  readonly cancel: (renderId: string) => Promise<void>;
+  readonly render: (input: MediaRenderInput, beforeSubmit?: (targetRef: string) => Promise<void>, onSubmitted?: () => void) => Promise<MediaRenderResult>;
+  readonly readRenderResult?: (renderId: string, targetRef: string) => Promise<MediaRenderResult>;
+  readonly releaseRender?: (renderId: string, targetRef: string) => Promise<void>;
+  readonly cancel: (renderId: string, targetRef?: string) => Promise<void>;
   readonly checkpoint: (input: CheckpointInput) => Promise<PipelineCheckpoint>;
   readonly pipelineContext: (input: { pipelineId?: string; stage?: string }) => Promise<PipelineContext>;
   readonly prepareAudio: (input: AudioPreparationInput) => Promise<PreparedAudio>;

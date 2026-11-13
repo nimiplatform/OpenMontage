@@ -1,0 +1,17 @@
+.montage-account-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 20px;min-height:56px;background:#111113;color:#eee;border-bottom:1px solid #29292d}
+.montage-account-controls>div{flex-wrap:wrap}
+.montage-account-controls button{min-height:44px}
+.montage-workspace-note,.montage-connect{padding:10px 20px;margin:0;background:#18181c;color:#c4c4cc;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.montage-connect button{min-height:44px;text-decoration:underline}
+.montage-remote .backlot-app{min-height:calc(100dvh - 110px)}
+@media(max-width:700px){
+  .montage-remote .backlot-app .slate{gap:12px;align-items:center}
+  .montage-remote .backlot-app .slate>div:first-of-type{flex:1 1 calc(100% - 44px)}
+  .montage-remote .backlot-app .slate .spacer{display:none}
+  .montage-remote .backlot-app .slate>button:first-of-type{margin-left:auto}
+  .montage-remote .backlot-app .bl-wordmark{overflow-wrap:normal}
+  .montage-remote .backlot-app button{min-height:44px}
+  .montage-remote .backlot-app .rail{padding:18px 0;overflow-x:auto}
+  .montage-remote .backlot-app .stage .name{max-width:none;white-space:nowrap;letter-spacing:0;font-size:12px}
+  .montage-remote .backlot-app .bl-toolbar{margin-bottom:20px}
+}

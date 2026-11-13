@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NimiAIConfigSnapshot } from '@nimiplatform/sdk';
 import type { MediaRenderResult, MediaSceneInput, PipelineCheckpoint, PipelineDefinition, ProductionStage } from '../../src-electron/media-contract.js';
-import { getNimiLocalAppClient } from '../shell/auth/local-app-client.js';
+import { useMontagePlatform } from './platform.js';
+import { renderInputKey, MediaOperationStateError } from './render-recovery.js';
 import { assertConfiguration, ConfigurationChangedError, generateSceneMedia, measureMediaDuration, type GeneratedMedia, type SceneGeneration, type SourceMedia, type SourceTranscription } from './generation.js';
 import { transcribeSource } from './transcription.js';
 import { narrationCues, validateCues, type SubtitleTrack } from './subtitles.js';
@@ -31,19 +32,21 @@ function mediaInput(image: { bytes: Uint8Array; mimeType: string }, narration?: 
 }
 
 export function useProductionController() {
+  const {kind,client,media,connected}=useMontagePlatform();
   const [project, setProject] = useState(newProductionProject);
   const projectRef = useRef(project);
-  const store = useRef<ProductionProjectStore | null>(null);
+  const restored = useRef(false);
+  const repository=useMemo(()=>new ProductionProjectStore(client,restored.current?projectRef.current:undefined),[client]);
   const [loaded, setLoaded] = useState(false);
   const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
   const [pipelineError, setPipelineError] = useState('');
   const [workingStage, setWorkingStage] = useState<string | null>(null);
-  const pipelineRequest = useRef<ReturnType<NonNullable<typeof window.openMontageMedia>['pipelineContext']> | null>(null);
   const pipeline = pipelines.find((item) => item.id === project.pipelineId);
   const originalWorkflow = project.pipelineId !== 'nimi-image-explainer';
   const [library, setLibrary] = useState<ProjectSummary[]>([]);
   const [saveStatus, setSaveStatus] = useState('正在读取项目');
   const [saveError, setSaveError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [voices, setVoices] = useState<readonly { voiceId: string; name: string }[]>([]);
   const [voiceError, setVoiceError] = useState('');
   const [voicesLoaded, setVoicesLoaded] = useState(false);
@@ -72,33 +75,40 @@ export function useProductionController() {
   };
 
   const saveProject = useCallback(async (value = projectRef.current) => {
-    if (!store.current) throw new Error('项目存储尚未就绪。');
     setSaveStatus('正在保存'); setSaveError('');
     try {
-      await store.current.save(value);
+      await repository.save(value);
       setSaveStatus('已保存到 Nimi');
       setLibrary((current) => [summarizeProject(value), ...current.filter((entry) => entry.id !== value.id)]);
     } catch (cause) { setSaveStatus('保存失败'); setSaveError(errorMessage(cause)); throw cause; }
-  }, []);
+  }, [repository]);
 
   const refreshVoices = useCallback(async () => {
     setVoicesLoaded(false); setVoices([]); setVoiceError(''); setDisplayedConfig(null);
     try {
-      const client = getNimiLocalAppClient();
       const snapshot = await client.aiConfig.get();
       setDisplayedConfig(snapshot);
       const result = await client.aiConfig.listOptions({ kind: 'preset-voices' });
       if (result.kind !== 'preset-voices') throw new Error('音色列表格式不正确。');
       setVoices(result.options); setVoicesLoaded(true);
     } catch (cause) { setVoiceError(errorMessage(cause)); }
-  }, []);
+  }, [client]);
+
+  const refreshPipeline = useCallback(async () => {
+    setPipelineError('');
+    try {
+      const context=await media.pipelineContext({});
+      if(context.type!=='catalog')throw new Error('PC 制作工具没有返回管线目录。');
+      setPipelines(context.pipelines);
+    } catch(cause){setPipelineError(errorMessage(cause));}
+  },[media]);
 
   useEffect(() => {
+    if (!connected) return;
     let disposed = false;
-    const repository = new ProductionProjectStore(getNimiLocalAppClient()); store.current = repository;
     void (async () => {
       const projects = await repository.list();
-      const previous = projects[0] ? await repository.load(projects[0].id) : null;
+      const previous = !restored.current && projects[0] ? await repository.load(projects[0].id) : null;
       if (disposed) return;
       setLibrary(projects);
       if (previous) {
@@ -107,19 +117,18 @@ export function useProductionController() {
         const unfinished = Object.values(previous.checkpoints).find((entry) => entry.status === 'failed');
         if (unfinished?.error) setError('上次制作未完成：' + unfinished.error);
       }
-      if (!disposed) { setLoaded(true); setSaveStatus(previous ? '已恢复上次项目' : '新项目'); }
-    })().catch((cause) => { if (!disposed) { setError('无法打开项目：' + errorMessage(cause)); setSaveStatus('读取失败'); } });
+      if (!disposed) { restored.current=true; setLoaded(true); setLoadError(''); setSaveStatus(previous ? '已恢复上次项目' : '新项目'); }
+    })().catch((cause) => { if (!disposed) { setLoadError('无法打开项目：' + errorMessage(cause)); setSaveStatus('读取失败'); } });
     void refreshVoices();
-    pipelineRequest.current ??= window.openMontageMedia!.pipelineContext({});
-    void pipelineRequest.current.then((context) => { if (!disposed && context.type === 'catalog') setPipelines(context.pipelines); }).catch((cause) => { if (!disposed) setPipelineError(errorMessage(cause)); });
+    void refreshPipeline();
     return () => { disposed = true; };
-  }, [refreshVoices, updateProject]);
+  }, [repository, connected, refreshPipeline, refreshVoices, updateProject]);
 
   useEffect(() => {
-    if (!loaded || busy) return;
+    if (!loaded || busy || !connected) return;
     const timer = setTimeout(() => { void saveProject().catch(() => undefined); }, 350);
     return () => clearTimeout(timer);
-  }, [project, loaded, busy, saveProject]);
+  }, [project, loaded, busy, connected, saveProject]);
 
   const updateAssets = useCallback((index: number, change: Partial<SceneGeneration>) => {
     return updateProject({ assets: projectRef.current.assets.map((scene, sceneIndex) => sceneIndex === index ? { ...scene, ...change } : scene) });
@@ -127,9 +136,9 @@ export function useProductionController() {
 
   const checkpoint = async (stage: ProductionStage, status: PipelineCheckpoint['status'], artifacts: Record<string, unknown>, humanApproved = false, detail?: string) => {
     const current = projectRef.current;
-    if (!window.openMontageMedia?.checkpoint) throw new Error('阶段检查接口尚未加载，请从 Nimi 重开 OpenMontage。');
+    if (!media?.checkpoint) throw new Error('阶段检查接口尚未加载，请从 Nimi 重开 OpenMontage。');
     const metadata = stage === 'scene_plan' && status === 'completed' && displayedConfig ? { ai_config_revision: displayedConfig.revision } : status === 'failed' && stopRequested.current ? { scheduling_stopped_by_user: true } : undefined;
-    const result = await window.openMontageMedia.checkpoint({ pipelineId: current.pipelineId, projectId: current.id, title: projectTitle(current), stage, status, artifacts, humanApproved, checkpoints: current.checkpoints, ...(metadata ? { metadata } : {}), ...(detail ? { error: detail } : {}) });
+    const result = await media.checkpoint({ pipelineId: current.pipelineId, projectId: current.id, title: projectTitle(current), stage, status, artifacts, humanApproved, checkpoints: current.checkpoints, ...(metadata ? { metadata } : {}), ...(detail ? { error: detail } : {}) });
     recordActivity((({ scene_plan: '方案与剧本', assets: '素材', compose: '合成' } as Record<string, string>)[stage] || stage) + ' · ' + ({ completed: humanApproved ? '已确认' : '完成', awaiting_human: '等待审阅', in_progress: '开始', failed: stopRequested.current ? '已暂停' : '失败' })[status], detail);
     if (stage === 'scene_plan' && status === 'completed') {
       updateProject({ decisions: recordProductionDecision(projectRef.current, { at: result.timestamp, models: modelSummary, voice: current.voiceId, renderer: 'Remotion', frame: '1280 × 720', scene_count: current.storyboard!.scenes.length }) });
@@ -138,23 +147,22 @@ export function useProductionController() {
   };
   const recordFailure = async (stage: ProductionStage, cause: unknown) => {
     const existing = projectRef.current.checkpoints[stage];
-    if (existing?.status !== 'in_progress') return;
-    try { await checkpoint(stage, 'failed', existing.artifacts, false, errorMessage(cause)); }
-    catch (saveCause) { setSaveError('阶段状态未保存：' + errorMessage(saveCause)); }
+    if (existing?.status !== 'in_progress') return existing?.status === 'failed';
+    try { await checkpoint(stage, 'failed', existing.artifacts, false, errorMessage(cause)); return true; }
+    catch (saveCause) { setSaveError('阶段状态未保存：' + errorMessage(saveCause)); return false; }
   };
 
   useEffect(() => () => {
     stopRequested.current = true;
     void textCancel.current?.();
-    if (currentJob.current) void getNimiLocalAppClient().ai.scenarioJobs.cancel(currentJob.current, 'OpenMontage window closed').catch(() => undefined);
-    if (currentRender.current) void window.openMontageMedia?.cancel(currentRender.current).catch(() => undefined);
+    if (currentJob.current) void client.ai.scenarioJobs.cancel(currentJob.current, 'OpenMontage window closed').catch(() => undefined);
+    if (currentRender.current) void media?.cancel(currentRender.current).catch(() => undefined);
   }, []);
 
   const prepare = async () => {
     if (originalWorkflow) { if (pipeline) await runOriginalStage(pipeline.stages[0]!.name); return; }
     setError(null); setBusy('planning'); setProgress('正在根据材料准备剧本与分镜'); stopRequested.current = false;
     try {
-      const client = getNimiLocalAppClient();
       await saveProject(updateProject({ checkpoints: {}, needsConfirmation: true }));
       await checkpoint('scene_plan', 'in_progress', {});
       const snapshot = await client.aiConfig.get();
@@ -186,7 +194,6 @@ export function useProductionController() {
     let operation = '素材准备';
     try {
       const plan = parseStoryboard(JSON.stringify(storyboard));
-      const client = getNimiLocalAppClient();
       if (!displayedConfig) throw new Error('请先在 AI 设置中确认制作模型。');
       const revision = displayedConfig.revision;
       await assertConfiguration(client, revision);
@@ -222,10 +229,56 @@ export function useProductionController() {
     } finally { setBusy(null); setProgress(''); currentJob.current = null; }
   };
 
-  const render = async () => {
-    setError(null); setBusy('rendering'); setWorkingStage('compose'); setProgress('正在本地混音与合成视频'); stopRequested.current = false;
+  const clearPendingRender = async () => {
+    const pending = projectRef.current.pendingRender;
+    if (!pending) return;
+    await saveProject({...projectRef.current,pendingRender:undefined});
+    updateProject({pendingRender:undefined});
+    // Only acknowledged App storage allows the temporary copies to be released.
+    void media.releaseRender?.(pending.id,pending.targetRef).catch(()=>undefined);
+  };
+  const finishRender = async (result: MediaRenderResult, renderId: string, subtitlesApplied: boolean) => {
+    const current = projectRef.current;
+    if (current.pendingRender && current.pendingRender.inputKey !== renderInputKey(current)) throw new Error('制作输入已改变，原合成不能覆盖当前项目。请先结束这次等待，再明确创建新合成。');
+    setVideo(result);
+    const output = await repository.saveVideo(current, result, subtitlesApplied, renderId);
+    await saveProject(updateProject({ output }));
+    if (originalWorkflow) {
+      const finalReview = { version: '1.0', output_path: output!.relativePath, status: 'revise', checks: { technical_probe: { valid_container: true, duration_seconds: result.durationSeconds, resolution: result.width + 'x' + result.height, has_audio: result.hasAudio, file_size_bytes: result.bytes.byteLength }, visual_spotcheck: { issues: ['等待用户检查画面'] }, audio_spotcheck: { issues: ['等待用户确认声音符合方案'] }, promise_preservation: { render_runtime_used: 'remotion', issues: ['等待用户确认制作意图'] }, subtitle_check: { subtitles_expected: subtitlesApplied, subtitles_present: subtitlesApplied, issues: subtitlesApplied ? ['等待用户确认字幕内容与时间'] : [] } } };
+      await workflowCheckpoint('compose', { render_report: renderReport(result, output!), final_review: finalReview }, 'awaiting_human');
+    } else await checkpoint('compose', 'completed', { render_report: renderReport(result, output!) });
+    await clearPendingRender();
+  };
+  const recoverRender = async () => {
+    const pending = projectRef.current.pendingRender;
+    if (!pending || busy || !media.readRenderResult) return;
+    setError(null); setBusy('rendering'); setProgress('正在读取原合成结果，不会重新执行制作'); currentRender.current = pending.id;
     try {
-      const media = window.openMontageMedia;
+      if (pending.inputKey !== renderInputKey(projectRef.current)) throw new Error('制作输入已改变，原合成不能覆盖当前项目。请先结束这次等待。');
+      const result = await media.readRenderResult(pending.id, pending.targetRef);
+      await finishRender(result, pending.id, pending.subtitlesApplied);
+    } catch (cause) {
+      setError(errorMessage(cause));
+      if (cause instanceof MediaOperationStateError && cause.mediaState === 'failed') {
+        if (await recordFailure('compose', cause)) await clearPendingRender().catch(error => setSaveError(errorMessage(error)));
+      }
+    } finally { currentRender.current = null; setBusy(null); setProgress(''); }
+  };
+  const abandonRender = async () => {
+    const pending = projectRef.current.pendingRender;
+    if (!pending || busy) return;
+    setBusy('rendering'); setError(null);
+    try {
+      await checkpoint('compose', 'failed', projectRef.current.checkpoints.compose?.artifacts || {}, false, '用户结束等待；原 PC 合成结果未确认。');
+      recordActivity('结束等待原合成（未自动重做）', pending.id);
+      await saveProject(updateProject({ pendingRender: undefined }));
+    } catch(cause) { setError(errorMessage(cause)); }
+    finally { setBusy(null); }
+  };
+  const render = async () => {
+    if (projectRef.current.pendingRender) { setError('请先读取原合成结果或明确结束这次等待。'); return; }
+    setError(null); setBusy('rendering'); setWorkingStage('compose'); setProgress(kind === 'desktop' ? '正在本地混音与合成视频' : '正在向电脑传送素材并等待合成结果'); stopRequested.current = false;
+    try {
       if (!media) throw new Error('媒体接口尚未加载，请从 Nimi 重新启动 OpenMontage。');
       const availability = await media.inspect();
       if (!availability.available) throw new Error('本地媒体工具尚未就绪：' + availability.missing.join('、'));
@@ -245,17 +298,19 @@ export function useProductionController() {
       const music = projectRef.current.musicState?.source || projectRef.current.musicState?.music;
       const subtitleConfig = projectRef.current.artifacts?.edit_decisions?.subtitles as { enabled?: boolean } | undefined;
       const subtitles = projectRef.current.subtitleTrack && (!originalWorkflow || subtitleConfig?.enabled === true) ? projectRef.current.subtitleTrack : undefined;
-      const result = await media.render({ renderId, scenes, ...(originalWorkflow ? { editDecisions: projectRef.current.artifacts?.edit_decisions } : {}), ...(music ? { music: { bytes: music.bytes, mimeType: music.mimeType } } : {}), ...(subtitles ? { subtitles: { cues: subtitles.cues, fontSize: subtitles.fontSize, position: subtitles.position } } : {}) });
-      if (!stopRequested.current) {
-        setVideo(result);
-        const output = await store.current!.saveVideo(projectRef.current, result, !!subtitles);
-        await saveProject(updateProject({ output }));
-        if (originalWorkflow) {
-          const finalReview = { version: '1.0', output_path: output!.relativePath, status: 'revise', checks: { technical_probe: { valid_container: true, duration_seconds: result.durationSeconds, resolution: result.width + 'x' + result.height, has_audio: result.hasAudio, file_size_bytes: result.bytes.byteLength }, visual_spotcheck: { issues: ['等待用户检查画面'] }, audio_spotcheck: { issues: ['等待用户确认声音符合方案'] }, promise_preservation: { render_runtime_used: 'remotion', issues: ['等待用户确认制作意图'] }, subtitle_check: { subtitles_expected: !!subtitles, subtitles_present: !!subtitles, issues: subtitles ? ['等待用户确认字幕内容与时间'] : [] } } };
-          await workflowCheckpoint('compose', { render_report: renderReport(result, output!), final_review: finalReview }, 'awaiting_human');
-        } else await checkpoint('compose', 'completed', { render_report: renderReport(result, output!) });
+      const inputKey = renderInputKey(projectRef.current);
+      const result = await media.render({ renderId, scenes, ...(originalWorkflow ? { editDecisions: projectRef.current.artifacts?.edit_decisions } : {}), ...(music ? { music: { bytes: music.bytes, mimeType: music.mimeType } } : {}), ...(subtitles ? { subtitles: { cues: subtitles.cues, fontSize: subtitles.fontSize, position: subtitles.position } } : {}) }, media.readRenderResult ? async targetRef => {
+        await saveProject(updateProject({pendingRender:{id:renderId,targetRef,inputKey,subtitlesApplied:!!subtitles}}));
+      } : undefined, kind === 'desktop' ? undefined : () => setProgress('电脑已接收合成，等待原任务结果'));
+      if (!stopRequested.current) await finishRender(result, renderId, !!subtitles);
+    } catch (cause) {
+      setError(errorMessage(cause));
+      const failed = cause instanceof MediaOperationStateError && cause.mediaState === 'failed';
+      if (!projectRef.current.pendingRender || failed) {
+        const recorded = await recordFailure('compose', cause);
+        if (failed && recorded) await clearPendingRender().catch(error => setSaveError(errorMessage(error)));
       }
-    } catch (cause) { setError(errorMessage(cause)); await recordFailure('compose', cause); }
+    }
     finally { currentRender.current = null; setBusy(null); setWorkingStage(null); setProgress(''); }
   };
 
@@ -263,8 +318,8 @@ export function useProductionController() {
     stopRequested.current = true; setProgress('正在请求停止；等待当前任务的实际结果');
     try {
       await textCancel.current?.();
-      if (currentJob.current) await getNimiLocalAppClient().ai.scenarioJobs.cancel(currentJob.current, 'User requested stop in OpenMontage');
-      if (currentRender.current) await window.openMontageMedia?.cancel(currentRender.current);
+      if (currentJob.current) await client.ai.scenarioJobs.cancel(currentJob.current, 'User requested stop in OpenMontage');
+      if (currentRender.current) await media?.cancel(currentRender.current, projectRef.current.pendingRender?.targetRef);
     } catch (cause) { setError('停止请求未确认：' + errorMessage(cause)); }
   };
 
@@ -282,7 +337,7 @@ export function useProductionController() {
       if (scene.pendingSubmission) throw new Error('上次提交结果仍不确定。请先在 Nimi 核对任务，当前不能盲目重新提交。');
       const key = kind === 'image' ? 'imageJobId' : 'narrationJobId';
       if (scene[key] && !scene[kind]) {
-        const { job } = await getNimiLocalAppClient().ai.scenarioJobs.get(scene[key]!);
+        const { job } = await client.ai.scenarioJobs.get(scene[key]!);
         if (!['completed', 'failed', 'canceled', 'timeout'].includes(job.status)) throw new Error('原任务仍在运行，请先继续该任务；运行时可请求停止。');
       }
       recordActivity('重新准备场景 ' + (index + 1) + ' · ' + (kind === 'image' ? '配图' : '旁白'));
@@ -295,9 +350,9 @@ export function useProductionController() {
     setError(null); setLoaded(false);
     try {
       await saveProject();
-      const selected = id ? await store.current!.load(id) : newProductionProject(pipelineId);
+      const selected = id ? await repository.load(id) : newProductionProject(pipelineId);
       projectRef.current = selected; setProject(selected);
-      setVideo(selected.output ? await store.current!.readVideo(selected.output) : undefined);
+      setVideo(selected.output ? await repository.readVideo(selected.output) : undefined);
       setLoaded(true); setSaveStatus(id ? '项目已打开' : '新项目');
     } catch (cause) { setError('无法打开项目：' + errorMessage(cause)); setLoaded(true); }
   };
@@ -356,9 +411,8 @@ export function useProductionController() {
         return;
       }
       setProgress('正在准备' + (stageNames[stage] || stage));
-      const context = await window.openMontageMedia!.pipelineContext({ pipelineId: projectRef.current.pipelineId, stage });
+      const context = await media.pipelineContext({ pipelineId: projectRef.current.pipelineId, stage });
       if (context.type !== 'stage') throw new Error('阶段上下文不完整。');
-      const client = getNimiLocalAppClient();
       if (!displayedConfig) throw new Error('请先确认 AI 配置。');
       await assertConfiguration(client, displayedConfig.revision, 'text.generate');
       let correction: { output: string; validationError: string } | undefined;
@@ -418,12 +472,12 @@ export function useProductionController() {
         artifacts = { ...artifacts, final_review: review };
       }
       if (stage === 'publish') {
-        if (!current.output || !store.current) throw new Error('没有可导出的成片。');
-        const media = video || await store.current.readVideo(current.output);
+        if (!current.output || !repository) throw new Error('没有可导出的成片。');
+        const media = video || await repository.readVideo(current.output);
         const destination = 'projects/' + current.id + '/exports/' + current.output.relativePath.split('/').at(-1);
-        await getNimiLocalAppClient().storage.assets.write({ relativePath: destination, body: media.bytes, mediaType: 'video/mp4', overwrite: true });
+        await client.storage.assets.write({ relativePath: destination, body: media.bytes, mediaType: 'video/mp4', overwrite: true });
         const metadata = { title: projectTitle(current), description: current.material };
-        await getNimiLocalAppClient().storage.writeJson('production/exports/' + current.id + '.json', metadata);
+        await client.storage.writeJson('production/exports/' + current.id + '.json', metadata);
         artifacts = { publish_log: { version: '1.0', entries: [{ platform: 'local-project', status: 'exported', timestamp: new Date().toISOString(), export_path: destination, metadata_used: metadata }], metadata: { scope: 'Nimi project export; no external platform posting' } } };
       }
       await workflowCheckpoint(stage, artifacts, 'completed', true);
@@ -453,7 +507,7 @@ export function useProductionController() {
     if (!current.storyboard || !displayedConfig) throw new Error('请先完成分镜与 AI 配置。');
     const approvedRevision = current.checkpoints.scene_plan?.metadata?.ai_config_revision;
     if (typeof approvedRevision !== 'string') throw new Error('请先确认分镜使用的 AI 配置。');
-    await assertConfiguration(getNimiLocalAppClient(), approvedRevision);
+    await assertConfiguration(client, approvedRevision);
     const plannedScenes = (current.artifacts?.scene_plan?.scenes || []) as { required_assets?: Record<string, unknown>[] }[];
     const plannedMusic = plannedScenes.flatMap((scene) => scene.required_assets || []).filter((asset) => asset.type === 'music');
     const musicRequests = [...new Set(plannedMusic.map((asset) => String(asset.source_asset_id || asset.description)))];
@@ -467,14 +521,14 @@ export function useProductionController() {
     const neededCapabilities = new Set<string>(current.storyboard.scenes.filter((scene) => !scene.sourceAssetId).map((scene) => scene.visualKind === 'video' ? 'video.generate' : 'image.generate'));
     if (current.narrationEnabled !== false && current.storyboard.scenes.some((scene) => scene.narration.trim())) neededCapabilities.add('audio.synthesize');
     if (musicPrompt && !sourceMusic) neededCapabilities.add('music.generate');
-    await assertConfiguration(getNimiLocalAppClient(), approvedRevision, [...neededCapabilities]);
+    await assertConfiguration(client, approvedRevision, [...neededCapabilities]);
     let referenceArtifactId: string | undefined;
     if (current.referenceImageId) {
       const reference = current.sources?.find((source) => source.id === current.referenceImageId);
       if (!reference || !['image/png', 'image/jpeg', 'image/webp'].includes(reference.mimeType)) throw new Error('首帧参考图不存在，请重新选择。');
       referenceArtifactId = reference.referenceArtifactId;
       if (!referenceArtifactId) {
-        const uploaded = await getNimiLocalAppClient().ai.artifacts.upload({ bytes: reference.bytes, mimeType: reference.mimeType as 'image/png' | 'image/jpeg' | 'image/webp' });
+        const uploaded = await client.ai.artifacts.upload({ bytes: reference.bytes, mimeType: reference.mimeType as 'image/png' | 'image/jpeg' | 'image/webp' });
         referenceArtifactId = uploaded.artifactId;
         await saveProject(updateProject({ sources: current.sources!.map((source) => source.id === reference.id ? { ...source, referenceArtifactId } : source) }));
       }
@@ -491,18 +545,18 @@ export function useProductionController() {
       } else {
         const kind = scene.visualKind === 'video' ? 'video' : 'image';
         setProgress('场景 ' + (index + 1) + ' · 生成' + (kind === 'video' ? '视频' : '配图'));
-        await generateSceneMedia({ client: getNimiLocalAppClient(), projectId: current.id, scene, kind, referenceArtifactId, voiceId: current.voiceId, existing: projectRef.current.assets[index], approvedRevision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: (status) => { if (status === 'canceled') setProgress('Nimi 已确认取消'); }, onChange: async (change) => { if (change.imageJobId || change.videoJobId) recordActivity('场景 ' + (index + 1) + ' · 画面任务已登记', change.imageJobId || change.videoJobId); await saveProject(updateAssets(index, change)); } });
+        await generateSceneMedia({ client: client, projectId: current.id, scene, kind, referenceArtifactId, voiceId: current.voiceId, existing: projectRef.current.assets[index], approvedRevision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: (status) => { if (status === 'canceled') setProgress('Nimi 已确认取消'); }, onChange: async (change) => { if (change.imageJobId || change.videoJobId) recordActivity('场景 ' + (index + 1) + ' · 画面任务已登记', change.imageJobId || change.videoJobId); await saveProject(updateAssets(index, change)); } });
       }
       if (current.narrationEnabled !== false && scene.narration.trim()) {
         setProgress('场景 ' + (index + 1) + ' · 生成旁白');
-        await generateSceneMedia({ client: getNimiLocalAppClient(), projectId: current.id, scene, kind: 'narration', voiceId: current.voiceId, existing: projectRef.current.assets[index], approvedRevision: displayedConfig.revision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: () => undefined, onChange: async (change) => { await saveProject(updateAssets(index, change)); } });
+        await generateSceneMedia({ client: client, projectId: current.id, scene, kind: 'narration', voiceId: current.voiceId, existing: projectRef.current.assets[index], approvedRevision: displayedConfig.revision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: () => undefined, onChange: async (change) => { await saveProject(updateAssets(index, change)); } });
       }
     }
     if (sourceMusic) {
       await saveProject(updateProject({ musicState: { source: sourceMusic } }));
     } else if (musicPrompt) {
       setProgress('生成配乐');
-      await generateSceneMedia({ client: getNimiLocalAppClient(), projectId: current.id, scene: { title: '配乐', narration: '', imagePrompt: musicPrompt, durationSeconds: current.duration }, kind: 'music', musicLyrics: current.musicLyrics, voiceId: '', existing: projectRef.current.musicState || {}, approvedRevision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: () => undefined, onChange: async (change) => { await saveProject(updateProject({ musicState: { ...projectRef.current.musicState, ...change } })); } });
+      await generateSceneMedia({ client: client, projectId: current.id, scene: { title: '配乐', narration: '', imagePrompt: musicPrompt, durationSeconds: current.duration }, kind: 'music', musicLyrics: current.musicLyrics, voiceId: '', existing: projectRef.current.musicState || {}, approvedRevision, stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onStatus: () => undefined, onChange: async (change) => { await saveProject(updateProject({ musicState: { ...projectRef.current.musicState, ...change } })); } });
     }
     await workflowCheckpoint('assets', { asset_manifest: assetManifest(projectRef.current) }, 'awaiting_human');
   };
@@ -521,7 +575,7 @@ export function useProductionController() {
         if (file.type.startsWith('image/')) { const bitmap = await createImageBitmap(file); source.width = bitmap.width; source.height = bitmap.height; bitmap.close(); }
         else { const element = document.createElement(file.type.startsWith('video/') ? 'video' : 'audio'); await new Promise<void>((resolve, reject) => { element.onloadedmetadata = () => { source.durationSeconds = element.duration; if (element instanceof HTMLVideoElement) { source.width = element.videoWidth; source.height = element.videoHeight; } resolve(); }; element.onerror = () => reject(new Error('源素材无法解码。')); element.src = url; }); element.removeAttribute('src'); element.load(); }
       } finally { URL.revokeObjectURL(url); }
-      await getNimiLocalAppClient().storage.assets.write({ relativePath: source.relativePath, body: file, mediaType: file.type });
+      await client.storage.assets.write({ relativePath: source.relativePath, body: file, mediaType: file.type });
       recordActivity('导入源素材', file.name);
       await saveProject(updateProject({ sources: [...(projectRef.current.sources || []), source], needsConfirmation: true }));
     } catch (cause) { setError(errorMessage(cause)); }
@@ -534,7 +588,7 @@ export function useProductionController() {
     setBusy('assets'); setError(null); stopRequested.current = false; setProgress('准备并转写 ' + source.name);
     try {
       if (!displayedConfig) throw new Error('请先选择转写模型。');
-      await transcribeSource({ client: getNimiLocalAppClient(), source, options, restart, approvedRevision: displayedConfig.revision,
+      await transcribeSource({ media, client, source, options, restart, approvedRevision: displayedConfig.revision,
         stopped: () => stopRequested.current, onJob: (id) => { currentJob.current = id; }, onPreparation: (id) => { currentRender.current = id; }, onStatus: (status) => setProgress('转写 ' + source.name + ' · ' + status),
         onChange: async (transcription) => {
           const previous = projectRef.current.sources?.find((item) => item.id === sourceId);
@@ -562,7 +616,7 @@ export function useProductionController() {
       const request = source.transcriptionRequest;
       if (request?.pendingSubmission) throw new Error('提交结果仍不确定，请先核对原任务。');
       if (request?.jobId) {
-        const { job } = await getNimiLocalAppClient().ai.scenarioJobs.get(request.jobId);
+        const { job } = await client.ai.scenarioJobs.get(request.jobId);
         if (!['completed', 'failed', 'canceled', 'timeout'].includes(job.status)) throw new Error('当前转写任务尚未结束，请先停止或继续原任务。');
       }
       recordActivity('保留已保存的转写', source.name);
@@ -585,7 +639,7 @@ export function useProductionController() {
   const exportSubtitleDraft = async () => {
     const draft = projectRef.current.subtitleDraft;
     if (!draft) throw new Error('请先创建字幕。');
-    return window.openMontageMedia!.exportSubtitles({ cues: validateCues(draft.cues, video?.durationSeconds) });
+    return media.exportSubtitles({ cues: validateCues(draft.cues, video?.durationSeconds) });
   };
 
   const applySubtitles = async (remove = false) => {
@@ -600,8 +654,7 @@ export function useProductionController() {
         if (!Number.isInteger(draft!.fontSize) || draft!.fontSize < 12 || draft!.fontSize > 96) throw new Error('字幕字号应为 12–96 的整数。');
         const files = await exportSubtitleDraft(); const id = crypto.randomUUID();
         const srtPath = 'projects/' + current.id + '/subtitles/' + id + '.srt'; const vttPath = 'projects/' + current.id + '/subtitles/' + id + '.vtt';
-        const client = getNimiLocalAppClient();
-        await client.storage.assets.write({ relativePath: srtPath, body: new TextEncoder().encode(files.srt), mediaType: 'application/x-subrip' });
+          await client.storage.assets.write({ relativePath: srtPath, body: new TextEncoder().encode(files.srt), mediaType: 'application/x-subrip' });
         await client.storage.assets.write({ relativePath: vttPath, body: new TextEncoder().encode(files.vtt), mediaType: 'text/vtt' });
         track = { ...draft!, cues: validateCues(draft!.cues), srtPath, vttPath };
       }
@@ -633,7 +686,7 @@ export function useProductionController() {
       for (const kind of ['image', 'narration'] as const) {
         const jobId = scene[kind === 'image' ? 'imageJobId' : 'narrationJobId'];
         if (jobId && !scene[kind]) {
-          const { job } = await getNimiLocalAppClient().ai.scenarioJobs.get(jobId);
+          const { job } = await client.ai.scenarioJobs.get(jobId);
           if (!['completed', 'failed', 'canceled', 'timeout'].includes(job.status)) throw new Error('该场景任务仍在运行，请先继续或取消原任务。');
         }
       }
@@ -647,9 +700,9 @@ export function useProductionController() {
     [nextAssets[index], nextAssets[index + delta]] = [nextAssets[index + delta], nextAssets[index]];
     arrangeScenes(scenes, nextAssets, '调整场景顺序');
   };
-  return { project, library, loaded, saveStatus, saveError, voices, voiceReady, voiceError, displayedConfig,
-    busy, progress, error, video, videoUrl, completeAssets, needsConfirmation, modelSummary,
+  return { project, library, loaded, pendingRender: project.pendingRender, locked: !!busy || !!project.pendingRender, recoverRender, abandonRender, saveStatus, saveError, voices, voiceReady, voiceError, displayedConfig,
+    busy, progress, error: error || loadError, video, videoUrl, completeAssets, needsConfirmation, modelSummary,
     updateProject, openProject, chooseVoice, configurationCommitted, prepare, generateAssets, render, stop,
-    editScene, regenerate, addScene, removeScene, moveScene, pipelines, pipeline, pipelineError, originalWorkflow, workingStage, runOriginalStage, approveOriginalStage, reviseOriginalArtifact, importSource,
+    editScene, regenerate, addScene, removeScene, moveScene, pipelines, pipeline, pipelineError, refreshPipeline, originalWorkflow, workingStage, runOriginalStage, approveOriginalStage, reviseOriginalArtifact, importSource,
     transcribeSourceFile, editTranscription, keepSavedTranscription, createNarrationSubtitles, exportSubtitleDraft, applySubtitles };
 }

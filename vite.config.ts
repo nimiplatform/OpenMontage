@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   base: './',
-  cacheDir: '.vite',
+  cacheDir: '.nimi/local/vite-desktop',
+  server:{watch:{ignored:['**/.nimi/local/**','**/android/**','**/dist-web/**','**/dist-mobile/**','**/dist-electron/**']}},
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],

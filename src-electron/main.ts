@@ -1,6 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { app, BrowserWindow, ipcMain, Menu, protocol, session, webContents } from 'electron';
+import { randomUUID } from 'node:crypto';
+import { configureNimiElectronAppHostProfile } from '@nimiplatform/kit/shell/electron/host-profile';
+import { RemoteMediaProvider } from './remote-media.js';
+import { MediaRenderer } from './media-runtime.js';
 import { registerOpenMontageMediaBridge } from './media-bridge.js';
 import { resolveMediaRuntimePaths } from './media-runtime.js';
 import {
@@ -10,6 +14,9 @@ import {
 } from '@nimiplatform/kit/shell/electron/main';
 
 declare const __NIMI_ELECTRON_PRODUCTION__: boolean;
+
+try { configureNimiElectronAppHostProfile(app); }
+catch (cause) { process.stderr.write(`[nimi-app-host-profile] ${String(cause)}\n`); app.exit(78); throw cause; }
 
 const APP_ID = 'openmontage.studio';
 const NATIVE_BUNDLE_IDENTIFIER = "ai.nimi.apps.openmontage.studio";
@@ -24,6 +31,7 @@ const productionRendererUrl = pathToFileURL(path.join(appRoot, 'dist', 'index.ht
 const developmentRendererUrl = readDevelopmentRendererUrl();
 const rendererUrl = developmentRendererUrl || productionRendererUrl;
 const allowedRendererUrls = [rendererUrl];
+let remoteMedia: RemoteMediaProvider | undefined;
 
 app.setName("OpenMontage");
 app.setAppUserModelId(NATIVE_BUNDLE_IDENTIFIER);
@@ -46,7 +54,7 @@ void app.whenReady().then(async () => {
   app.on('before-quit', (event) => {
     if (finishingQuit) return;
     event.preventDefault();
-    void media.dispose().then(() => {
+    void Promise.all([media.dispose(),remoteMedia?.close()]).then(() => {
       finishingQuit = true;
       app.quit();
     }).catch((error: unknown) => {
@@ -58,6 +66,12 @@ void app.whenReady().then(async () => {
     allowedRendererUrls,
     assetMediaPlatform: { protocol, webRequest: session.defaultSession.webRequest, webContents },
     ipcMain,
+    onSessionReady: (services) => {
+      void remoteMedia?.close();
+      const root = path.join(app.getPath('temp'), 'openmontage-remote-'+randomUUID());
+      remoteMedia = new RemoteMediaProvider(services,new MediaRenderer(resolveMediaRuntimePaths({appRoot,scratchRoot:path.join(root,'worker'),packaged:app.isPackaged,resourcesPath:process.resourcesPath})),root);
+    },
+    onSessionInvalidated: () => { void remoteMedia?.close(); remoteMedia=undefined; },
   });
   await createMainWindow();
   app.on('activate', () => {

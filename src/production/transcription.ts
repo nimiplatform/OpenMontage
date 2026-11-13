@@ -1,8 +1,10 @@
-import type { NimiLocalAppClient } from '@nimiplatform/sdk';
+import type { NimiAppRuntimeClient } from '@nimiplatform/sdk/app';
+import type { OpenMontageMedia } from '../../src-electron/media-contract.js';
 import { assertConfiguration, completedJob, type SourceMedia, type SourceTranscription } from './generation.js';
 
 export async function transcribeSource(input: {
-  client: NimiLocalAppClient; source: SourceMedia; approvedRevision: string;
+  media: OpenMontageMedia;
+  client: NimiAppRuntimeClient; source: SourceMedia; approvedRevision: string;
   options: Pick<SourceTranscription, 'startSeconds' | 'endSeconds' | 'language' | 'timestamps'>;
   restart?: boolean;
   stopped: () => boolean; onJob: (id: string | null) => void; onPreparation: (id: string | null) => void;
@@ -21,7 +23,7 @@ export async function transcribeSource(input: {
     if (input.stopped()) throw new Error('已停止转写。');
     const operationId = crypto.randomUUID(); input.onPreparation(operationId);
     let audio;
-    try { audio = await window.openMontageMedia!.prepareAudio({ operationId, bytes: source.bytes, mimeType: source.mimeType, startSeconds: options.startSeconds, endSeconds: options.endSeconds }); }
+    try { audio = await input.media.prepareAudio({ operationId, bytes: source.bytes, mimeType: source.mimeType, startSeconds: options.startSeconds, endSeconds: options.endSeconds }); }
     finally { input.onPreparation(null); }
     if (input.stopped()) throw new Error('已停止转写。');
     state = { ...options, pendingSubmission: true }; await input.onChange(state);

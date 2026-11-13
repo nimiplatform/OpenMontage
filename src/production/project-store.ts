@@ -1,4 +1,6 @@
-import type { NimiLocalAppClient } from '@nimiplatform/sdk';
+import type { NimiAppRuntimeClient } from '@nimiplatform/sdk/app';
+import { extractNimiErrorFields } from '@nimiplatform/sdk/types';
+import type { PendingRender } from './render-recovery.js';
 import type { MediaRenderResult, PipelineCheckpoint, ProductionStage } from '../../src-electron/media-contract.js';
 import type { SceneGeneration, SourceMedia } from './generation.js';
 import type { Storyboard } from './storyboard.js';
@@ -7,6 +9,7 @@ import type { SubtitleDraft, SubtitleTrack } from './subtitles.js';
 export type ProductionDecision = { at: string; models: string; voice: string; renderer: string; frame: string; scene_count: number };
 
 export type ProductionProject = {
+  pendingRender?: PendingRender;
   id: string;
   pipelineId: string;
   artifacts?: Record<string, Record<string, unknown>>;
@@ -58,10 +61,10 @@ export function serializeProject(project: ProductionProject) {
 }
 
 function notFound(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'not-found';
+  return extractNimiErrorFields(error).reasonCode === 'APP_STORAGE_ENTRY_NOT_FOUND';
 }
 
-export async function readAsset(client: NimiLocalAppClient, relativePath: string): Promise<Uint8Array> {
+export async function readAsset(client: NimiAppRuntimeClient, relativePath: string): Promise<Uint8Array> {
   const result = await client.storage.assets.read({ relativePath });
   if (result.asset.sizeBytes > 128 * 1024 * 1024) throw new Error('该素材超过当前预览支持的大小。');
   const bytes = new Uint8Array(result.range.length);
@@ -76,8 +79,11 @@ export class ProductionProjectStore {
   private library: ProjectSummary[] = [];
   private savedCheckpoints = new Map<string, ProductionProject['checkpoints']>();
 
-  private readonly client: NimiLocalAppClient;
-  constructor(client: NimiLocalAppClient) { this.client = client; }
+  private readonly client: NimiAppRuntimeClient;
+  constructor(client: NimiAppRuntimeClient, retained?: ProductionProject) {
+    this.client = client;
+    if(retained)this.savedCheckpoints.set(retained.id,structuredClone(retained.checkpoints));
+  }
 
   async list(): Promise<ProjectSummary[]> {
     try {
@@ -94,6 +100,10 @@ export class ProductionProjectStore {
     const { value } = await this.client.storage.readJson('production/projects/' + id + '.json');
     const project = value as unknown as ProductionProject;
     if (!project || project.id !== id || typeof project.pipelineId !== 'string' || typeof project.material !== 'string' || !Number.isFinite(project.duration) || project.duration <= 0 || !Array.isArray(project.assets) || (project.storyboard ? project.assets.length !== project.storyboard.scenes.length || project.assets.length < 1 : project.assets.length !== 0) || !project.checkpoints || typeof project.checkpoints !== 'object') throw new Error('项目内容不完整，未覆盖原有内容。');
+    if (project.pendingRender && (typeof project.pendingRender.id !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(project.pendingRender.id)
+      || typeof project.pendingRender.targetRef !== 'string' || !project.pendingRender.targetRef || project.pendingRender.targetRef.length > 1024
+      || typeof project.pendingRender.inputKey !== 'string' || project.pendingRender.inputKey.length > 512 * 1024
+      || typeof project.pendingRender.subtitlesApplied !== 'boolean')) throw new Error('未确认的合成记录不完整，未覆盖原项目。');
     this.savedCheckpoints.set(id, structuredClone(project.checkpoints));
     for (const scene of project.assets) {
       for (const kind of ['image', 'video', 'narration', 'music', 'source'] as const) {
@@ -127,9 +137,16 @@ export class ProductionProjectStore {
     return save;
   }
 
-  async saveVideo(project: ProductionProject, video: MediaRenderResult, subtitlesApplied = false): Promise<ProductionProject['output']> {
-    const relativePath = 'projects/' + project.id + '/renders/' + crypto.randomUUID() + '.mp4';
-    await this.client.storage.assets.write({ relativePath, body: video.bytes, mediaType: 'video/mp4' });
+  async saveVideo(project: ProductionProject, video: MediaRenderResult, subtitlesApplied = false, renderId: string = crypto.randomUUID()): Promise<ProductionProject['output']> {
+    if (!/^[a-zA-Z0-9-]{8,80}$/.test(renderId)) throw new Error('合成编号无效。');
+    const relativePath = 'projects/' + project.id + '/renders/' + renderId + '.mp4';
+    try { await this.client.storage.assets.write({ relativePath, body: video.bytes, mediaType: 'video/mp4' }); }
+    catch (cause) {
+      if (extractNimiErrorFields(cause).reasonCode !== 'APP_STORAGE_ENTRY_ALREADY_EXISTS') throw cause;
+      const existing = await this.client.storage.assets.stat(relativePath);
+      const digest = 'sha256:' + Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array(video.bytes).buffer)), byte => byte.toString(16).padStart(2, '0')).join('');
+      if (existing.sha256 !== digest || existing.sizeBytes !== video.bytes.byteLength || existing.mediaType !== 'video/mp4') throw new Error('原合成文件与本次结果不一致，未覆盖。');
+    }
     return { relativePath, width: video.width, height: video.height, durationSeconds: video.durationSeconds, subtitlesApplied };
   }
 

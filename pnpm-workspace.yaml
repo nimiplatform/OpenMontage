@@ -2,3 +2,9 @@
 # The Python tools and Remotion composer retain their own dependency setup.
 packages:
   - '.'
+
+overrides:
+  '@nimiplatform/sdk': file:.nimi/local/packages/integration-20261113-rc.2/nimiplatform-sdk-0.24.0-rc.2.tgz
+  '@nimiplatform/kit': file:.nimi/local/packages/integration-20261113-rc.2/nimiplatform-kit-0.24.0-rc.1.tgz
+  '@nimiplatform/kit-protected-local-win32-x64': file:.nimi/local/packages/integration-20261113-rc.2/nimiplatform-kit-protected-local-win32-x64-0.24.0-rc.1.tgz
+  '@nimiplatform/app-tools': file:.nimi/local/packages/integration-20261113-rc.2/nimiplatform-app-tools-0.16.0-rc.2.tgz

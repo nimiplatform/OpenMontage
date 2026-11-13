@@ -3,8 +3,10 @@ import { Download, Plus, Trash2 } from 'lucide-react';
 import type { useProductionController } from './use-production.js';
 import { projectTitle } from './project-store.js';
 import type { SubtitleDraft } from './subtitles.js';
+import { useMontagePlatform } from './platform.js';
 
 export function SubtitleEditor({ c }: { c: ReturnType<typeof useProductionController> }) {
+  const platform=useMontagePlatform();
   const draft = c.project.subtitleDraft;
   const [exporting, setExporting] = useState(false); const [error, setError] = useState('');
   const [previewDraft, setPreviewDraft] = useState(true);
@@ -21,14 +23,14 @@ export function SubtitleEditor({ c }: { c: ReturnType<typeof useProductionContro
     textTrack.mode = previewDraft && !burned ? 'showing' : 'disabled';
     return () => { textTrack.mode = 'disabled'; };
   }, [cues, c.videoUrl, burned, previewDraft]);
-  const disabled = !!c.busy || exporting;
+  const disabled = c.locked || exporting;
   const update = (next: SubtitleDraft) => c.updateProject({ subtitleDraft: next });
   const add = () => { const current = draft || { cues: [], origin: 'manual' as const, fontSize: 36, position: 'bottom-center' as const }; const start = current.cues.at(-1)?.end || 0; update({ ...current, cues: [...current.cues, { start, end: start + 2, text: '' }] }); };
   const download = async (format: 'srt' | 'vtt') => {
     setExporting(true); setError('');
     try {
-      const files = await c.exportSubtitleDraft(); const url = URL.createObjectURL(new Blob([files[format]], { type: format === 'vtt' ? 'text/vtt' : 'application/x-subrip' }));
-      const anchor = document.createElement('a'); anchor.href = url; anchor.download = projectTitle(c.project).replace(/[<>:"/\\|?*]/g, '-') + '.' + format; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const files = await c.exportSubtitleDraft();
+      await platform.deliverFile(new Blob([files[format]], { type: format === 'vtt' ? 'text/vtt' : 'application/x-subrip' }),projectTitle(c.project).replace(/[<>:"/\\|?*]/g, '-') + '.' + format);
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { setExporting(false); }
   };
