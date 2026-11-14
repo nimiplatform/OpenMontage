@@ -10,9 +10,11 @@ Generate or select the material you want to use. Confirm the material approval b
 
 Current output uses a 1280 × 720 canvas. Planning durations are targets; actual duration follows the generated media and approved edit. Transcription results and manual or paragraph subtitles need review. Automatic word alignment, multilingual dubbing and some specialized workflows remain unfinished; a catalogue entry alone does not establish an available workflow.
 
-## Web preview
+## Web and Android previews
 
-The Web preview currently uses admitted local development sources. Keep Nimi Home and OpenMontage open on the PC. Sign in with the same Nimi account, confirm the source in Home, and allow its media operations under Integrations. Android adaptation is still being verified; there is no public Web or Android release entry.
+These previews use admitted local development sources. Keep Nimi Home and OpenMontage open on the PC. Sign in with the same Nimi account, confirm the source in Home, and allow its media operations under Integrations. There is no public Web or Android release entry.
+
+Android can make a quick image explainer and save its finished video and subtitle files through the system Save picker. Choose a destination and keep the App open until it reports completion. A system picker may temporarily disconnect the Runtime; returning reconnects without repeating generation or composition. Source import and the complete hybrid workflow on Android are still being verified.
 
 PC, Web and Android registrations keep separate project stores. Existing PC projects stay in their original registration. AI runs on the connected Runtime; composition and audio preparation run in the PC App.
 

@@ -1,4 +1,4 @@
-import { StrictMode, useMemo, useRef } from 'react';
+import { StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { NimiAppSessionProvider, NimiAppAccessGate, NimiAccountControl, useNimiAppSession, type NimiAppSession, type NimiAppScope } from '@nimiplatform/kit/auth/app';
 import { NimiThemeProvider, TooltipProvider, NimiToaster, Popover, PopoverContent, PopoverTrigger, Button } from '@nimiplatform/kit/ui';
@@ -16,16 +16,25 @@ function AccountMenu(){
 }
 function Workspace({kind}:{kind:'web'|'android'}){
   const {session,snapshot}=useNimiAppSession();
+  const [deliveryStatus,setDeliveryStatus]=useState('');
   const retained=useRef<NimiAppScope|undefined>(undefined);
   if(snapshot.runtime.status==='connected')retained.current=snapshot.runtime.scope;
   const scope=retained.current,connected=snapshot.runtime.status==='connected';
   const media=useMemo(()=>scope?createRemoteMedia(scope):undefined,[scope]);
   const platform=useMemo(()=>scope&&media?{kind,connected,client:scope.client,media,deliverFile:async(blob:Blob,name:string)=>{
     scope.signal.throwIfAborted();
-    if(kind==='android'){const {deliverAndroidMedia}=await import('./android-media.js');await deliverAndroidMedia(blob,name,scope.signal);}
+    if(kind==='android'){
+      setDeliveryStatus('正在准备保存到设备的文件…');
+      try {
+        const {deliverAndroidMedia}=await import('./android-media.js');
+        await deliverAndroidMedia(blob,name,scope.signal);
+        setDeliveryStatus('文件已保存到所选位置。');
+      } catch(cause) {setDeliveryStatus('');throw cause;}
+    }
     else await downloadFile(blob,name);
   }}:undefined,[scope,media,kind,connected]);
   return <>
+    {deliveryStatus&&<p className="montage-workspace-note" role="status">{deliveryStatus}</p>}
     {!connected&&<section className="montage-connect">{!scope?<NimiAppAccessGate title="OpenMontage" language="zh" externalAccountControl>{()=>null}</NimiAppAccessGate>:<>
       <p>{snapshot.runtime.status==='connecting'?'正在连接 PC…':'PC 已断开。当前项目保留；连接恢复不会重新执行 AI 或制作任务。'}</p>
       <button onClick={()=>snapshot.runtime.status==='connecting'?session.disconnectRuntime():void session.connectRuntime()}>{snapshot.runtime.status==='connecting'?'取消连接':'连接 PC'}</button>

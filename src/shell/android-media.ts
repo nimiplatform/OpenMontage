@@ -1,24 +1,30 @@
-import { Directory, Filesystem } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
+import { registerPlugin } from '@capacitor/core';
+
+type ExportSink = {
+  beginExport(input: { name: string; mimeType: string; size: number }): Promise<{ id: string }>;
+  appendExport(input: { id: string; offset: number; data: string }): Promise<{ received: number }>;
+  saveExport(input: { id: string }): Promise<{ name: string; bytesWritten: number }>;
+  abortExport(input: { id: string }): Promise<void>;
+};
+const files = registerPlugin<ExportSink>('OpenMontageFiles');
 
 export async function deliverAndroidMedia(blob: Blob, name: string, signal: AbortSignal) {
-  if (!name || name === '.' || name === '..' || /[/\\\0]/u.test(name)) throw new Error('文件名无效。');
-  const folder = `openmontage-exports/${crypto.randomUUID()}`;
-  const path = `${folder}/${name}`;
-  const file = await Filesystem.writeFile({ directory: Directory.Cache, path, data: '', recursive: true });
-  const remove = async () => { await Filesystem.deleteFile({ directory: Directory.Cache, path }); await Filesystem.rmdir({ directory: Directory.Cache, path: folder }); };
+  signal.throwIfAborted();
+  const { id } = await files.beginExport({ name, mimeType: blob.type || 'application/octet-stream', size: blob.size });
   try {
     for (let offset = 0; offset < blob.size; offset += 65536) {
       signal.throwIfAborted();
       const bytes = new Uint8Array(await blob.slice(offset, offset + 65536).arrayBuffer());
-      let data = ''; for (let i = 0; i < bytes.length; i += 8192) data += String.fromCharCode(...bytes.subarray(i, i + 8192));
-      await Filesystem.appendFile({ directory: Directory.Cache, path, data: btoa(data) });
+      let value = '';
+      for (let index = 0; index < bytes.length; index += 8192) value += String.fromCharCode(...bytes.subarray(index, index + 8192));
+      await files.appendExport({ id, offset, data: btoa(value) });
     }
     signal.throwIfAborted();
-    await Share.share({ files: [file.uri], title: name });
+    // All remote bytes are staged before opening the OS picker. Its local save
+    // may complete after backgrounding ends this Runtime scope; it issues no RPC.
+    return await files.saveExport({ id });
   } catch (cause) {
-    await remove().catch(() => undefined);
-    if (cause instanceof Error && cause.message === 'Share canceled') return;
+    await files.abortExport({ id }).catch(() => undefined);
     throw cause;
   }
 }
