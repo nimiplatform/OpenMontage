@@ -4,6 +4,12 @@ The current package selection and upgrade verification are in [README.md](README
 
 OpenMontage video production with Nimi providing the platform session, App Access, model configuration and AI execution. OpenMontage owns its production workflows, editorial choices and approvals. The Nimi platform account is separate from any application-specific account or permissions; this integration does not add a business-account system.
 
+## Windows development acceptance — 2026-10-28
+
+The current SDK 0.22.2 / Kit 0.22.1 checkout was exercised through Desktop-supervised Electron and its own loopback CDP, using an independent development registration. The previous incomplete project was retained. A fictional one-scene Rainy Library explainer generated a script and image, then exposed an App defect: narration always requested MP3, which the selected Qwen3 CustomVoice audio.cpp model does not support. Narration now leaves the format to Nimi configuration and stores the artifact using its returned MIME type; no provider-specific fallback or Runtime bypass was added.
+
+The regression failed before the fix. All 25 App tests, typecheck, build and platform check pass after it. The actual retry retained the image, generated 33.68-second WAV narration, played it, and composed an H.264/AAC MP4 at 1280 × 720. The exported `.nimi/local/windows-dev/rainy-library.mp4` is 21,962,539 bytes and 33.749333 seconds; FFprobe inspection and complete FFmpeg decoding with `-xerror` pass. Playback advanced in the supervised App. This is development quick-explainer evidence, not renewed installed-package, Registry or all-workflow acceptance. The dev server later exited with `local-development-dev-server-exited-1`; the cause is unconfirmed, separate from the completed export. Resuming the same registration restored the completed project and the 33.749333-second video with decoded 1280 × 720 metadata.
+
 ## Windows release 0.1.2 — 2026-10-13
 
 Published [v0.1.2](https://github.com/nimiplatform/OpenMontage/releases/tag/v0.1.2) for Windows x86_64 and macOS arm64 with SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.2 and Nimi Coding 0.6.5. Type checking and 24 App tests pass; seven packaged-media tests cover real Windows rendering, edits, scratch cleanup and Chinese subtitles. Reasoning summaries no longer end text artifacts, Jobs use the current contract, and source image geometry follows Nimi configuration while the final canvas stays 1280×720. [Registry candidate #93](https://github.com/nimiplatform/nimi-app-registry/pull/93) passes the candidate checks and still awaits human admission; publication does not establish installed acceptance.
@@ -64,8 +70,10 @@ The Windows x86_64 and macOS Apple Silicon packages include Python, Node, Remoti
 
 ## Development
 
-This fork tracks [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage)
-from upstream baseline `08e2151fa02de28a5d6a312b3d575692bf147ad7`. The downstream
+This fork tracks [OpenMontageInc/OpenMontage](https://github.com/OpenMontageInc/OpenMontage)
+(formerly `calesthio/OpenMontage`) merged to upstream `main` commit
+`2e003e65fa99a0f329478a2c1cdcf26bc481933a` (previous baseline
+`08e2151fa02de28a5d6a312b3d575692bf147ad7`). The downstream
 App mainline is `nimi`; Nimi App versions are independent of upstream tags.
 For an upstream update, select an exact commit and review code, dependency,
 license, CI and instruction-entry changes together. Do not import upstream
@@ -77,34 +85,36 @@ as a mandatory onboarding step for every coding task. The current hybrid
 slice can validate tooling changes; the remaining product workflows above
 retain their separate completion requirements.
 
-Use Node 24 and pnpm 10.34.5. Public dependencies are app-tools 0.12.2, SDK 0.21.0 and Kit/native 0.19.3, with nimi-coding pinned to 0.6.5. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage and is recorded in the lockfile; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
+Use Node 24 (`>=24.22.1 <25`, release builds bundle `24.22.3`) and pnpm 10.34.7. Public dependencies are `@nimiplatform/app-tools` `^0.16.0-rc.10`, `@nimiplatform/sdk` `^0.24.0-rc.10` and `@nimiplatform/kit` `^0.24.0-rc.16` (with matching optional native bindings `0.24.0-rc.16`), with `@nimiplatform/nimi-coding` pinned to `0.7.0`, Electron `45.4.1` and Vite `8.3.8`. Public builds use no Nimi workspace overrides. A declared pnpm patch for the build-only `@electron/osx-sign` 2.7.0 bounds its file scanning, preventing EMFILE on the bundled Python/Node trees. It preserves signing coverage; re-evaluate it when upgrading that dependency. The App's single-package workspace isolates it from enclosing workspaces.
 
-App Tools maintains the project lifecycle skill and its independent AGENTS block. Nimi-coding 0.6.3 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
+App Tools maintains the project lifecycle skill, `.github/workflows/nimi-app-release.yml`, `.github/workflows/nimi-web-release.yml` (via `public_slug: openmontage`), and its independent AGENTS block. Nimi-coding 0.7.0 maintains its own AGENTS block; CLAUDE.md routes to the App instructions without a duplicate retired managed block. Studio's one-turn text display ignores opaque continuity metadata and rejects undeclared tool output; it does not introduce a tool-execution workflow.
 
 ```powershell
-corepack pnpm@10.34.5 install --frozen-lockfile
+corepack pnpm@10.34.7 install --frozen-lockfile
 py -3 -m venv .venv
-.venv/Scripts/python -m pip install -r app_runtime/requirements-media.txt
+.venv/Scripts/python -m pip install 'pip>=26.2.2' -r app_runtime/requirements-media.txt
 npm --prefix remotion-composer ci
-corepack pnpm@10.34.5 run sync
-corepack pnpm@10.34.5 run check
-corepack pnpm@10.34.5 run test:app
-corepack pnpm@10.34.5 run app:build -- --target windows-x86_64
-corepack pnpm@10.34.5 run dev -- --cdp-port 9236
+corepack pnpm@10.34.7 run sync
+corepack pnpm@10.34.7 run check
+corepack pnpm@10.34.7 run test:app
+$env:NIMI_WEB_VERSION='0.1.3'; $env:NIMI_WEB_ARCHIVE='.nimi/local/web-release/nimi-web-0.1.3.zip'; corepack pnpm@10.34.7 run build:web:release
+corepack pnpm@10.34.7 exec nimi-app build --target windows-x86_64 --production
+corepack pnpm@10.34.7 exec nimi-app pack --target windows-x86_64 --production
+corepack pnpm@10.34.7 run dev -- --resume <selector> --cdp-port 9236
 ```
 
 On macOS Apple Silicon, use the same public dependency installation and lifecycle commands, with this native media setup and target:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python3 -m pip install -r app_runtime/requirements-media.txt
+.venv/bin/python3 -m pip install 'pip>=26.2.2' -r app_runtime/requirements-media.txt
 npm --prefix remotion-composer ci
 pnpm exec nimi-app build --target macos-aarch64 --production
 pnpm exec nimi-app pack --target macos-aarch64 --production
-pnpm run dev -- --cdp-port 9236
+pnpm run dev -- --resume <selector> --cdp-port 9236
 ```
 
-`predev` prepares the pinned native FFmpeg/FFprobe distribution. Production builds bundle Python 3.14.4, Node 24.15.0, the locked composer and its headless browser; installed users do not need a separate Python, Node or Homebrew setup. Archive checksums are pinned for both platforms. Use a Python version supported by the pinned media wheels for development (the packaged build uses 3.14.4).
+`predev` prepares the pinned native FFmpeg/FFprobe distribution. Production builds bundle Python 3.14.4, Node 24.22.3, pip 26.2.2, the locked composer and its headless browser; installed users do not need a separate Python, Node or Homebrew setup. Archive checksums are pinned for both platforms. Use a Python version supported by the pinned media wheels for development (the packaged build uses 3.14.4).
 
 The official scaffold was integrated using app-tools' existing-App adoption workflow. There is no managed scaffold lock. `sync` maintains package-owned projections; `check`, `dev`, `app:build` and `pack` use the official lifecycle owners. The App-owned build adds the selected media runtime. Native media and checkpoint tests run against that completed package during the build; `test:app` runs the application control tests without requiring media setup.
 

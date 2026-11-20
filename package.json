@@ -39,14 +39,13 @@
     "dev:web": "nimi-app dev --platform web",
     "dev:web-renderer": "vite --config vite.web.config.ts --mode web",
     "build:web": "pnpm run typecheck && vite build --config vite.web.config.ts --mode web",
+    "build:web:release": "pnpm run typecheck && vite build --config vite.web.config.ts --mode web-release",
     "build:mobile": "pnpm run typecheck && vite build --config vite.mobile.config.ts",
     "sync:android": "pnpm run build:mobile && cap sync android",
     "dev:android": "pnpm run sync:android && cap run android --no-sync",
     "dev:mobile": "nimi-app dev --platform mobile"
   },
   "dependencies": {
-    "@nimiplatform/kit": "^0.24.0-rc.1",
-    "@nimiplatform/sdk": "^0.24.0-rc.2",
     "i18next": "^25.10.10",
     "lucide-react": "^0.577.0",
     "react": "^19.2.8",
@@ -54,25 +53,27 @@
     "@capacitor/android": "8.6.0",
     "@capacitor/core": "8.6.0",
     "@capacitor/app": "8.1.2",
-    "@capacitor/browser": "8.0.5"
+    "@capacitor/browser": "8.0.5",
+    "@nimiplatform/sdk": "^0.24.0-rc.10",
+    "@nimiplatform/kit": "^0.24.0-rc.16"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
-    "@nimiplatform/app-tools": "^0.16.0-rc.2",
-    "@nimiplatform/nimi-coding": "0.7.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tauri-apps/cli": "^2.11.4",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.2",
-    "electron": "^45.0.0",
+    "electron": "^45.4.1",
     "esbuild": "^0.28.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "vite": "^8.3.5",
+    "vite": "^8.3.8",
     "yaml": "^2.9.0",
-    "@capacitor/cli": "8.6.0"
+    "@capacitor/cli": "8.6.0",
+    "@nimiplatform/app-tools": "^0.16.0-rc.10",
+    "@nimiplatform/nimi-coding": "0.7.0"
   },
   "author": "OpenMontage contributors"
 }

@@ -33,6 +33,17 @@ test('recovery distinguishes changed production inputs from progress-only update
   assert.deepEqual(serializeProject(project).pendingRender,project.pendingRender);
 });
 
+test('render recovery input key survives Runtime JSON storage alphabetical key reordering on first reload', () => {
+  const sortKeys = value => Array.isArray(value) ? value.map(sortKeys) : value && typeof value === 'object'
+    ? Object.fromEntries(Object.keys(value).sort().map(k => [k, sortKeys(value[k])])) : value;
+  const inMemory = newProductionProject();
+  inMemory.storyboard = { title: 'Lighthouse', scenes: [{ title: 'Misty Sea', narration: 'Light crosses the mist.', imagePrompt: 'Coastal lighthouse at night' }] };
+  inMemory.subtitleTrack = { cues: [{ start: 0, end: 4, text: 'Light crosses the mist.' }], origin: 'narration', fontSize: 36, position: 'bottom-center', srtPath: 'sub.srt', vttPath: 'sub.vtt' };
+  const beforeReloadKey = renderInputKey(inMemory);
+  const reloadedFromRuntimeStorage = sortKeys(serializeProject(inMemory));
+  assert.equal(renderInputKey(reloadedFromRuntimeStorage), beforeReloadKey);
+});
+
 test('a new registered workspace handles only the canonical missing-index reason as empty', async () => {
   const missing = new ProductionProjectStore({ storage: { readJson: async () => { throw createNimiError({ reasonCode: 'APP_STORAGE_ENTRY_NOT_FOUND', message: 'local app storage operation failed', source: 'runtime' }); } } });
   assert.deepEqual(await missing.list(), []);

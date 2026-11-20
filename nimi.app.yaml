@@ -1,4 +1,5 @@
 app_id: openmontage.studio
+public_slug: openmontage
 display_name: OpenMontage
 version: 0.1.3
 profile: standalone
