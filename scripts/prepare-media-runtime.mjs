@@ -7,8 +7,8 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 const PYTHON_VERSION = '3.14.4';
-const NODE_VERSION = '24.15.0';
-const PIP_VERSION = '26.2.1';
+const NODE_VERSION = '24.22.3';
+const PIP_VERSION = '26.2.2';
 const FFMPEG_VERSION = '9.0.1';
 const MACOS = process.platform === 'darwin' && process.arch === 'arm64';
 const PYTHON_MAC = 'cpython-3.14.4+20260414-aarch64-apple-darwin-install_only_stripped.tar.gz';
@@ -112,7 +112,7 @@ export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
     }
     const nodeDistribution = `node-v${NODE_VERSION}-${MACOS ? 'darwin-arm64' : 'win-x64'}`;
     const nodeFilename = nodeDistribution + (MACOS ? '.tar.xz' : '.zip');
-    const nodeArchive = await download(`https://nodejs.org/dist/v${NODE_VERSION}/${nodeFilename}`, path.join(downloads, nodeFilename), MACOS ? 'af5cfaeafe603aaf7599f287fd9d100bb41f16794f49788fa59dd3f25546930f' : 'cc5149eabd53779ce1e7bdc5401643622d0c7e6800ade18928a767e940bb0e62');
+    const nodeArchive = await download(`https://nodejs.org/dist/v${NODE_VERSION}/${nodeFilename}`, path.join(downloads, nodeFilename), MACOS ? '1d64136c8a43d648d1b3bad10797a4c995b1ca032d2bde8799de43b37f058fe5' : 'e612af99f626ab415ea225af6bce5c971feb448cb5cae250bb1c3fa50c5f7d9f');
     const nodeExtract = path.join(temporary, 'node-extracted');
     await extract(nodeArchive, nodeExtract, appRoot);
     const nodeRoot = path.join(runtimeRoot, 'node');
@@ -123,7 +123,7 @@ export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
     const node = path.join(nodeRoot, MACOS ? 'bin/node' : 'node.exe');
     const sitePackages = path.join(pythonRoot, MACOS ? 'lib/python3.14/site-packages' : 'Lib/site-packages');
     const pipArchive = path.join(downloads, `pip-${PIP_VERSION}.zip`);
-    await download('https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl', pipArchive, '71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e');
+    await download('https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl', pipArchive, 'fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70');
     if (MACOS) {
       for (const name of await readdir(sitePackages)) {
         if (name === 'pip' || /^pip-[\d.]+\.dist-info$/.test(name)) await rm(path.join(sitePackages, name), { recursive: true, force: true });
@@ -136,9 +136,9 @@ export async function prepareMediaRuntime(appRoot, resourcesDirectory) {
 
     const files = [
       'app_runtime/__init__.py', 'app_runtime/media_worker.py', 'app_runtime/checkpoint_worker.py', 'app_runtime/pipeline_context.py', 'app_runtime/requirements-media.txt',
-      'tools/__init__.py', 'tools/base_tool.py', 'tools/audio/__init__.py', 'tools/audio/audio_mixer.py', 'tools/video/__init__.py', 'tools/video/video_compose.py',
+      'tools/__init__.py', 'tools/base_tool.py', 'tools/provider_pricing.py', 'tools/audio/__init__.py', 'tools/audio/audio_mixer.py', 'tools/video/__init__.py', 'tools/video/video_compose.py',
       'tools/subtitle/__init__.py', 'tools/subtitle/subtitle_gen.py',
-      'lib/__init__.py', 'lib/paths.py', 'lib/events.py', 'lib/media_profiles.py', 'lib/checkpoint.py', 'lib/pipeline_loader.py',
+      'lib/__init__.py', 'lib/paths.py', 'lib/events.py', 'lib/media_profiles.py', 'lib/checkpoint.py', 'lib/pipeline_loader.py', 'lib/asset_cache.py',
       'schemas/__init__.py', 'schemas/artifacts/__init__.py', 'schemas/artifacts/edit_decisions.schema.json',
       'schemas/artifacts/scene_plan.schema.json', 'schemas/artifacts/asset_manifest.schema.json', 'schemas/artifacts/render_report.schema.json',
       'schemas/checkpoints/checkpoint.schema.json', 'schemas/pipelines/pipeline_manifest.schema.json',

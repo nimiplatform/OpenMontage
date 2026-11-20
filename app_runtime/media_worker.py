@@ -249,6 +249,7 @@ def render(request: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("A subtitle extends beyond the edited video. Adjust its timing before rendering.")
         props["subtitles"] = {**edits.get("subtitles", {}), "cues": cues, "font_size": subtitle_input["fontSize"], "position": subtitle_input["position"]}
     output = root / "renders" / "final.mp4"
+    browser_executable = os.environ.get("OPENMONTAGE_REMOTION_BROWSER", "").strip()
     result = VideoCompose().execute({
         "operation": "remotion_render",
         "composition_data": props,
@@ -257,7 +258,7 @@ def render(request: dict[str, Any]) -> dict[str, Any]:
         "remotion_timeout_ms": 120_000,
         "remotion_entry_point": os.environ.get("OPENMONTAGE_REMOTION_ENTRY", "src/nimi-image-explainer.tsx"),
         "remotion_composition_id": "NimiImageExplainer",
-        "remotion_browser_executable": os.environ.get("OPENMONTAGE_REMOTION_BROWSER", ""),
+        **({"remotion_browser_executable": browser_executable} if browser_executable else {}),
     })
     if not result.success:
         raise RuntimeError(result.error or "Remotion composition failed.")

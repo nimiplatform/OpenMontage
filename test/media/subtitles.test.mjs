@@ -33,12 +33,13 @@ test('the original subtitle tool keeps actual segment gaps and Chinese text in S
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'openmontage-subtitle-test-'));
   const renderer = new MediaRenderer(resolveMediaRuntimePaths({ appRoot: process.cwd(), scratchRoot: scratch, packaged: true, resourcesPath: packagedResources(process.cwd()) }));
   try {
-    const result = await renderer.exportSubtitles({ cues: [{ start: 0, end: 1.28, text: '水在流动。' }, { start: 5, end: 6.52, text: '第二段旁白。' }] });
+    const result = await renderer.exportSubtitles({ cues: [{ start: 0, end: 1.28, text: '水在流动。' }, { start: 5, end: 6.52, text: '第二段旁白 <A & B>。' }] });
     assert.match(result.srt, /00:00:00,000 --> 00:00:01,280/);
     assert.match(result.srt, /00:00:05,000 --> 00:00:06,520/);
-    assert.match(result.srt, /第二段旁白。/);
+    assert.match(result.srt, /第二段旁白 <A & B>。/);
     assert.equal(result.srt.trim().split(/\r?\n\r?\n/).length, 2);
     assert.ok(result.vtt.startsWith('WEBVTT'));
+    assert.match(result.vtt, /第二段旁白 &lt;A &amp; B&gt;。/);
     await assert.rejects(renderer.exportSubtitles({ cues: [{ start: 2, end: 1, text: 'invalid timing' }] }), /valid start and end/);
     assert.deepEqual(await readdir(scratch), []);
   } finally { await renderer.dispose(); assert.equal(path.dirname(scratch), path.resolve(os.tmpdir())); await rm(scratch, { recursive: true, force: true }); }

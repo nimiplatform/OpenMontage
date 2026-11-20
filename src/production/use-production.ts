@@ -9,7 +9,7 @@ import { narrationCues, validateCues, type SubtitleTrack } from './subtitles.js'
 import { parseStoryboard, storyboardMessages, type StoryScene } from './storyboard.js';
 import { newProductionProject, ProductionProjectStore, recordProductionDecision, summarizeProject, projectTitle, type ProductionProject, type ProjectSummary } from './project-store.js';
 import { assetManifest, renderReport, scenePlanArtifact } from './pipeline.js';
-import { nextPipelineStage, parseStageArtifacts, stageMessages, stageNames, storyboardFromArtifacts } from './pipeline-workflow.js';
+import { approveProposalPacket, nextPipelineStage, parseStageArtifacts, stageMessages, stageNames, storyboardFromArtifacts } from './pipeline-workflow.js';
 import { retainSceneAssets } from './scene-revision.js';
 
 type BusyStep = 'planning' | 'assets' | 'rendering' | null;
@@ -466,6 +466,9 @@ export function useProductionController() {
       }
       if (Array.isArray(artifacts.decision_log?.decisions)) {
         artifacts = { ...artifacts, decision_log: { ...artifacts.decision_log, decisions: artifacts.decision_log.decisions.map((entry) => ({ ...entry, user_approved: true })) } };
+      }
+      if (stage === 'proposal' && artifacts.proposal_packet) {
+        artifacts = { ...artifacts, proposal_packet: approveProposalPacket(artifacts.proposal_packet) };
       }
       if (stage === 'compose') {
         const review = { ...artifacts.final_review, status: 'pass', checks: { ...(artifacts.final_review.checks as Record<string, unknown>), visual_spotcheck: { issues: [] }, audio_spotcheck: { issues: [] }, promise_preservation: { render_runtime_used: 'remotion', delivery_promise_honored: true }, subtitle_check: { issues: [] } }, metadata: { review_source: 'user-confirmed-in-app', confirmed_at: new Date().toISOString() } };

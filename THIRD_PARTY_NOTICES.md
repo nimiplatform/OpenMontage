@@ -9,7 +9,7 @@ The Windows x86_64 and macOS Apple Silicon media packages contain:
 | Component | Version | License and source |
 | --- | --- | --- |
 | Python | 3.14.4 | PSF License; [release and source](https://www.python.org/downloads/release/python-3144/). Windows uses the official embed archive; macOS uses [python-build-standalone 20260414](https://github.com/astral-sh/python-build-standalone/releases/tag/20260414), with its bundled Python and dependency notices retained. |
-| Node.js | 24.15.0 | MIT and third-party notices in `node/LICENSE`; [release and source](https://nodejs.org/dist/v24.15.0/) |
+| Node.js | 24.22.3 | MIT and third-party notices in `node/LICENSE`; [release and source](https://nodejs.org/dist/v24.22.3/) |
 | Pillow | 12.3.0 | HPND and bundled dependency notices in its Python distribution metadata; [source](https://github.com/python-pillow/Pillow/tree/12.3.0) |
 | jsonschema | 4.26.0 | MIT; [source](https://github.com/python-jsonschema/jsonschema) |
 | PyYAML | 6.0.3 | MIT; [source](https://github.com/yaml/pyyaml) |
