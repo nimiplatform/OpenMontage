@@ -14,7 +14,7 @@ Current output uses a 1280 × 720 canvas. Planning durations are targets; actual
 
 Keep Nimi Home and OpenMontage **0.1.3 or later** open on your primary PC. Earlier PC Catalog version **0.1.0** only consumes AI and does not provide the remote media studio required by Web and Android. Sign in with the same Nimi account, confirm the source in Home, and allow its `openmontage.media.v1` media operations under Integrations.
 
-Hosted Web release candidates target https://openmontage.nimi.xyz (opened from https://nimi.ai/apps/openmontage) after the matching PC version and Web release complete public release and Registry admission. Until those releases are admitted, Web and Android run only from admitted development sources.
+Open the [OpenMontage page on nimi.ai](https://nimi.ai/apps/openmontage) and choose **Open in browser** when available. On first use, check that Home shows `https://openmontage.nimi.xyz` before approving the source.
 
 Android can make a quick image explainer and save its finished video and subtitle files through the system Save picker. Choose a destination and keep the App open until it reports completion. A system picker may temporarily disconnect the Runtime; returning reconnects without repeating generation or composition. Source import and the complete hybrid workflow on Android are still being verified.
 
