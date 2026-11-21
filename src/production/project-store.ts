@@ -61,7 +61,8 @@ export function serializeProject(project: ProductionProject) {
 }
 
 function notFound(error: unknown): boolean {
-  return extractNimiErrorFields(error).reasonCode === 'APP_STORAGE_ENTRY_NOT_FOUND';
+  const fields = extractNimiErrorFields(error);
+  return fields.reasonCode === 'APP_STORAGE_ENTRY_NOT_FOUND' || fields.reasonCode === 'not-found' || fields.code === 'not-found';
 }
 
 export async function readAsset(client: NimiAppRuntimeClient, relativePath: string): Promise<Uint8Array> {
@@ -142,7 +143,8 @@ export class ProductionProjectStore {
     const relativePath = 'projects/' + project.id + '/renders/' + renderId + '.mp4';
     try { await this.client.storage.assets.write({ relativePath, body: video.bytes, mediaType: 'video/mp4' }); }
     catch (cause) {
-      if (extractNimiErrorFields(cause).reasonCode !== 'APP_STORAGE_ENTRY_ALREADY_EXISTS') throw cause;
+      const fields = extractNimiErrorFields(cause);
+      if (fields.reasonCode !== 'APP_STORAGE_ENTRY_ALREADY_EXISTS' && fields.reasonCode !== 'already-exists' && fields.code !== 'already-exists') throw cause;
       const existing = await this.client.storage.assets.stat(relativePath);
       const digest = 'sha256:' + Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array(video.bytes).buffer)), byte => byte.toString(16).padStart(2, '0')).join('');
       if (existing.sha256 !== digest || existing.sizeBytes !== video.bytes.byteLength || existing.mediaType !== 'video/mp4') throw new Error('原合成文件与本次结果不一致，未覆盖。');

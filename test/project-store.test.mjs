@@ -44,9 +44,11 @@ test('render recovery input key survives Runtime JSON storage alphabetical key r
   assert.equal(renderInputKey(reloadedFromRuntimeStorage), beforeReloadKey);
 });
 
-test('a new registered workspace handles only the canonical missing-index reason as empty', async () => {
-  const missing = new ProductionProjectStore({ storage: { readJson: async () => { throw createNimiError({ reasonCode: 'APP_STORAGE_ENTRY_NOT_FOUND', message: 'local app storage operation failed', source: 'runtime' }); } } });
-  assert.deepEqual(await missing.list(), []);
+test('a new registered workspace handles canonical missing-index reasons from remote and desktop carriers as empty', async () => {
+  const missingRemote = new ProductionProjectStore({ storage: { readJson: async () => { throw createNimiError({ reasonCode: 'APP_STORAGE_ENTRY_NOT_FOUND', message: 'local app storage operation failed', source: 'runtime' }); } } });
+  assert.deepEqual(await missingRemote.list(), []);
+  const missingDesktop = new ProductionProjectStore({ storage: { readJson: async () => { throw createNimiError({ reasonCode: 'not-found', message: 'not-found', source: 'sdk' }); } } });
+  assert.deepEqual(await missingDesktop.list(), []);
   const unavailable = new ProductionProjectStore({ storage: { readJson: async () => { throw createNimiError({ reasonCode: 'APP_STORAGE_UNAVAILABLE', message: 'local app storage operation failed', source: 'runtime' }); } } });
   await assert.rejects(unavailable.list(), error => error.reasonCode === 'APP_STORAGE_UNAVAILABLE');
 });

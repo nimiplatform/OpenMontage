@@ -1,7 +1,7 @@
 app_id: openmontage.studio
 public_slug: openmontage
 display_name: OpenMontage
-version: 0.1.3
+version: 0.1.4
 profile: standalone
 manifest_role: submitted-input
 app_access:
@@ -63,6 +63,82 @@ metadata:
   summary: "Produce narrated videos from source footage and generated media, with transcription, subtitles and local rendering powered by Nimi."
   icon: assets/app-icon.png
   release_notes: RELEASE_NOTES.md
+  author: OpenMontage contributors
+  homepage_url: https://github.com/nimiplatform/OpenMontage
+  support_url: https://github.com/nimiplatform/OpenMontage/issues
+  storefront:
+    category: video-media
+    default_locale: en
+    locales:
+      en:
+        tags:
+          - Video Production
+          - Storyboard
+          - AI Narration
+          - Subtitles
+          - Local Rendering
+        highlights:
+          - title: Stage-Gated Backlot Studio
+            description: Review and edit scripts, scene plans, and filmstrip assets at explicit approval gates before local composition.
+          - title: Explainer & Hybrid Timelines
+            description: Build narrated image explainers or mix imported footage, generated clips, images, and speech on one 720p timeline.
+          - title: Transcription & Subtitle Tools
+            description: Transcribe source audio ranges through Nimi, build narration-timed paragraph cues, export SRT/VTT, or burn captions locally.
+          - title: Local Remotion & Remote Companion
+            description: Render MP4 locally with bundled Remotion and FFmpeg, and connect the hosted Web studio to your primary PC via Nimi.
+      zh:
+        display_name: OpenMontage
+        summary: 基于 Nimi 编排素材与生成媒体，制作带旁白和字幕的视频，并在本地完成 720p 合成渲染。
+        introduction: NIMI_APP.zh.md
+        tags:
+          - 视频制作
+          - 分镜审阅
+          - 旁白配音
+          - 字幕合成
+          - 本地渲染
+        highlights:
+          - title: 分阶段审阅的 Backlot 制片台
+            description: 从创作方案、剧本到分镜素材逐段确认并修订，避免盲目重复生成，每步决策与任务记录清晰留档。
+          - title: 图文解说与混合素材时间线
+            description: 支持快速图文解说与混合素材制作，可将导入的实拍视频、图片与 Nimi 生成素材编排进同一部 720p 成片。
+          - title: 源素材转写与字幕校对烧录
+            description: 按时间段转写导入音视频并导出文本，依据实际旁白时长生成段落字幕，支持 SRT/VTT 导出与本地烧录。
+          - title: 本地 Remotion 合成与跨端协作
+            description: 内置 Python、Remotion 与 FFmpeg 完成本地渲染；保持主 PC 开启即可通过官方网页端协作调用本地合成。
+    media:
+      cover:
+        path: assets/storefront/cover.webp
+      gallery:
+        - id: studio-board
+          kind: image
+          path: assets/storefront/01-studio-board.webp
+          caption:
+            en: "Production overview: stage progress rail, approved screenplay sheet, model decisions, and recorded activity log"
+            zh: 制作总览：三阶段进度轨、已确认剧本页、模型与合成决策以及活动记录
+        - id: storyboard-review
+          kind: image
+          path: assets/storefront/02-storyboard-review.webp
+          caption:
+            en: "Storyboard filmstrip and scene inspector: audition each narration segment, review images, and edit prompts independently"
+            zh: 分镜与素材审阅：胶片带逐段试听旁白，点选单场景查看高清配图并修订标题、旁白与画面描述
+        - id: render-delivery
+          kind: image
+          path: assets/storefront/03-render-delivery.webp
+          caption:
+            en: "Local Remotion render & export: preview the composed 1280 × 720 MP4 with burned subtitles and export directly"
+            zh: 本地 Remotion 成片与交付：预览已烧录字幕的 1280 × 720 MP4 并一键导出成片
+        - id: subtitle-editor
+          kind: image
+          path: assets/storefront/04-subtitle-editor.webp
+          caption:
+            en: "Subtitle editor: adjust placement, font size, and narration-timed cues, export SRT/VTT, or burn captions into the render"
+            zh: 字幕校对与烧录：调整字幕位置、合成字号与逐条起止时间，支持导出 SRT/VTT 或重新合成烧录
+        - id: workflow-chooser
+          kind: image
+          path: assets/storefront/05-workflow-chooser.webp
+          caption:
+            en: "Workflow chooser: pick Quick Image Explainer or Basic Hybrid production with transparent stage gates and scope status"
+            zh: 选择制作流程：按需开启快速图文解说或混合素材制作，清晰展示各确认阶段与当前支持范围
 local_development:
   web:
     command: pnpm run dev:web-renderer

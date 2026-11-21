@@ -1,3 +1,9 @@
+# 0.1.4 — Bilingual storefront and fresh Desktop storage fix
+
+- Adds bilingual (English and Simplified Chinese) Nimi App storefront metadata, user introductions (`NIMI_APP.md`, `NIMI_APP.zh.md`), highlights, tags, and 16:9 Backlot studio cover and screenshots for Nimi Home and nimi.ai.
+- Upgrades to `@nimiplatform/app-tools` `0.16.0-rc.12` and updates the managed native release workflow to package the shared `storefront-media.zip`.
+- Fixes fresh Desktop registrations treating the protected shell carrier's `not-found` and `already-exists` storage responses consistently alongside remote Runtime codes.
+
 # 0.1.3 — Web access to PC video composition
 
 Keep OpenMontage 0.1.3 running on your primary PC to compose video from the hosted Web client. Review the scene materials before rendering, then preview and download the finished video. After a connection loss, reopen the same Web project and check its original composition task before starting another render. PC and Web projects are stored separately.
