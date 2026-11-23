@@ -54,8 +54,8 @@
     "@capacitor/core": "8.6.0",
     "@capacitor/app": "8.1.2",
     "@capacitor/browser": "8.0.5",
-    "@nimiplatform/sdk": "^0.24.0-rc.10",
-    "@nimiplatform/kit": "^0.24.0-rc.16"
+    "@nimiplatform/sdk": "^0.24.0-rc.11",
+    "@nimiplatform/kit": "^0.24.0-rc.18"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
@@ -72,7 +72,7 @@
     "vite": "^8.3.8",
     "yaml": "^2.9.0",
     "@capacitor/cli": "8.6.0",
-    "@nimiplatform/app-tools": "^0.16.0-rc.12",
+    "@nimiplatform/app-tools": "^0.16.0-rc.15",
     "@nimiplatform/nimi-coding": "0.7.0"
   },
   "author": "OpenMontage contributors"
